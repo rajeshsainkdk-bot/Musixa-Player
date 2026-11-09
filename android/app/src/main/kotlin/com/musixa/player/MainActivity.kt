@@ -1,4 +1,4 @@
-package com.musixa.player
+﻿package com.musixa.player
 
 import android.content.Context
 import android.content.Intent
@@ -13,7 +13,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity: AudioServiceActivity() {
-    private val CHANNEL = "com.msixa.player/app_share"
+    private val CHANNEL = "com.musixa.player/app_share"
     private var wakeLock: PowerManager.WakeLock? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {

@@ -129,7 +129,7 @@ jobs:
           import io.flutter.plugin.common.MethodChannel
 
           class MainActivity: AudioServiceActivity() {
-              private val CHANNEL = "com.msixa.player/app_share"
+              private val CHANNEL = "com.musixa.player/app_share"
 
               override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
                   super.configureFlutterEngine(flutterEngine)
@@ -236,7 +236,7 @@ jobs:
       - name: Run Automated Release Gate Tests
         run: |
           rm -f test/widget_test.dart
-          flutter test test/msixa_features_test.dart
+          flutter test test/musixa_features_test.dart
 
       - name: Build Google Play Store App Bundle (AAB)
         run: flutter build appbundle --release --no-tree-shake-icons
