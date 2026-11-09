@@ -18,12 +18,14 @@ class MainActivity: AudioServiceActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        val ctx: Context = applicationContext
+
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "acquireWakeLock" -> {
                     try {
                         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+                        val powerManager = ctx.getSystemService(Context.POWER_SERVICE) as PowerManager
                         if (wakeLock == null) {
                             wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Musixa:BulkUploadWakeLock")
                         }
@@ -50,7 +52,7 @@ class MainActivity: AudioServiceActivity() {
                     try {
                         val title = call.argument<String>("title") ?: "Musixa Upload"
                         val message = call.argument<String>("message") ?: "Upload Completed!"
-                        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                        val notificationManager = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                         val channelId = "musixa_upload_channel"
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                             val channel = NotificationChannel(
@@ -61,10 +63,10 @@ class MainActivity: AudioServiceActivity() {
                             notificationManager.createNotificationChannel(channel)
                         }
                         val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            Notification.Builder(this@MainActivity, channelId)
+                            Notification.Builder(ctx, channelId)
                         } else {
                             @Suppress("DEPRECATION")
-                            Notification.Builder(this@MainActivity)
+                            Notification.Builder(ctx)
                         }
                         builder.setSmallIcon(android.R.drawable.stat_sys_upload_done)
                             .setContentTitle(title)
@@ -82,8 +84,12 @@ class MainActivity: AudioServiceActivity() {
                             type = "text/plain"
                             putExtra(Intent.EXTRA_SUBJECT, "Musixa Player")
                             putExtra(Intent.EXTRA_TEXT, "Listen to high-res music & 10-band equalizer on Musixa Player: https://play.google.com/store/apps/details?id=com.musixa.player")
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         }
-                        this@MainActivity.startActivity(Intent.createChooser(shareIntent, "Share Musixa Player"))
+                        val chooser = Intent.createChooser(shareIntent, "Share Musixa Player").apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        ctx.startActivity(chooser)
                         result.success(true)
                     } catch (e: Exception) {
                         result.error("SHARE_ERROR", e.localizedMessage, null)
@@ -92,12 +98,12 @@ class MainActivity: AudioServiceActivity() {
                 "getAppVersion" -> {
                     try {
                         val pInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                            this@MainActivity.packageManager.getPackageInfo(this@MainActivity.packageName, 0).longVersionCode
+                            ctx.packageManager.getPackageInfo(ctx.packageName, 0).longVersionCode
                         } else {
                             @Suppress("DEPRECATION")
-                            this@MainActivity.packageManager.getPackageInfo(this@MainActivity.packageName, 0).versionCode.toLong()
+                            ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionCode.toLong()
                         }
-                        val versionName = this@MainActivity.packageManager.getPackageInfo(this@MainActivity.packageName, 0).versionName ?: "1.0.0"
+                        val versionName = ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName ?: "1.0.0"
                         result.success(mapOf(
                             "versionCode" to pInfo,
                             "versionName" to versionName
