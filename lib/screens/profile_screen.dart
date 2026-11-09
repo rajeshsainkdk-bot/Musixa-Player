@@ -392,7 +392,7 @@ class ProfileScreen extends StatelessWidget {
                     title: const Text('Privacy Policy', style: TextStyle(color: Colors.white, fontSize: 13)),
                     subtitle: const Text('Read how we protect your offline data', style: TextStyle(color: Colors.white54, fontSize: 10)),
                     trailing: const Icon(Icons.open_in_new_rounded, color: Colors.grey, size: 16),
-                    onPressed: () => UpdateService.openPlayStoreListing(),
+                    onTap: () => UpdateService.openPlayStoreListing(),
                   ),
                   const Divider(height: 1, color: Colors.white10),
                   ListTile(
@@ -400,7 +400,7 @@ class ProfileScreen extends StatelessWidget {
                     title: const Text('Rate Us on Google Play', style: TextStyle(color: Colors.white, fontSize: 13)),
                     subtitle: const Text('Help us grow by giving 5 stars ⭐', style: TextStyle(color: Colors.white54, fontSize: 10)),
                     trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.grey, size: 14),
-                    onPressed: () => UpdateService.openPlayStoreListing(),
+                    onTap: () => UpdateService.openPlayStoreListing(),
                   ),
                 ],
               ),
