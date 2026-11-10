@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/equalizer_preset.dart';
 import '../providers/player_provider.dart';
 import '../services/language_service.dart';
+import '../services/ad_service.dart';
 import '../theme/app_colors.dart';
 
 class EqualizerScreen extends StatelessWidget {
@@ -47,6 +48,106 @@ class EqualizerScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Rewarded Video Pro Monetization Card
+                    ListenableBuilder(
+                      listenable: AdService(),
+                      builder: (context, _) {
+                        final adService = AdService();
+                        final isUnlocked = adService.isProFeatureUnlocked;
+
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: isUnlocked
+                                  ? const [Color(0xFF065F46), Color(0xFF047857)]
+                                  : const [Color(0xFF1E1B4B), Color(0xFF31103F)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isUnlocked ? const Color(0xFF10B981) : const Color(0xFFFFB300).withOpacity(0.4),
+                              width: 1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: (isUnlocked ? Colors.green : Colors.purple).withOpacity(0.2),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.25),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  isUnlocked ? Icons.verified_rounded : Icons.workspace_premium_rounded,
+                                  color: isUnlocked ? const Color(0xFF34D399) : const Color(0xFFFFB300),
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      isUnlocked ? '👑 Pro Studio VIP Active' : '✨ Pro 10-Band EQ & 3D Bass',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      isUnlocked
+                                          ? 'Ultra-low distortion studio sound enabled'
+                                          : 'Watch a 30s video to unlock Pro FX for 24 hours',
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.7),
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (!isUnlocked)
+                                ElevatedButton.icon(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFFFFB300),
+                                    foregroundColor: Colors.black,
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  ),
+                                  icon: const Icon(Icons.play_circle_fill_rounded, size: 16),
+                                  label: const Text('Unlock', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                                  onPressed: () {
+                                    adService.showRewardedAdForProUnlock(
+                                      onUnlocked: () {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('🎉 10-Band Pro Studio FX unlocked for 24 hours!'),
+                                            backgroundColor: Color(0xFF10B981),
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+
                     // Preset selector chips
                     Text(
                       lang.t('presets_title'),

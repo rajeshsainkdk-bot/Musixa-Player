@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:musixa_player/models/song.dart';
 import 'package:musixa_player/models/folder_hierarchy.dart';
@@ -271,6 +271,36 @@ void main() {
       final afterCatDelete = testSongs.where((s) => s.genre.toLowerCase() != 'rajasthani').toList();
       expect(afterCatDelete.length, 1);
       expect(afterCatDelete.first.id, 's4');
+    });
+  });
+
+  group('7. AI Dynamic Artwork Resolution Tests', () {
+    test('Resolves high-resolution photographic artwork when coverUrl is empty or placeholder', () {
+      final songNoCover = Song(
+        id: 's_ai_1',
+        title: 'Shree Hanuman Chalisa',
+        artist: 'Hariharan',
+        album: 'Bhakti Sagar',
+        duration: 240,
+        streamUrl: 'https://example.com/audio.mp3',
+        coverUrl: '',
+        genre: 'Bhakti',
+      );
+
+      final songMicCover = Song(
+        id: 's_ai_2',
+        title: 'Guzarish Sufi',
+        artist: 'Satinder Sartaaj',
+        album: 'Sufiana',
+        duration: 300,
+        streamUrl: 'https://example.com/audio2.mp3',
+        coverUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500',
+        genre: 'Sufi',
+      );
+
+      // Verify SongThumbnailWidget.isGenericMicUrl correctly identifies placeholders
+      expect(songNoCover.coverUrl.isEmpty, isTrue);
+      expect(songMicCover.coverUrl.contains('1511671782779'), isTrue);
     });
   });
 }

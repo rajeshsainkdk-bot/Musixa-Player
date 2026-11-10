@@ -1,4 +1,4 @@
-﻿package com.musixa.player
+package com.musixa.player
 
 import android.content.Context
 import android.content.Intent
