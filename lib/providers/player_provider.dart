@@ -218,6 +218,11 @@ class PlayerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> pause() async {
+    await _audioService.pause();
+    notifyListeners();
+  }
+
   Future<void> seek(Duration pos) async {
     await _audioService.seek(pos);
   }

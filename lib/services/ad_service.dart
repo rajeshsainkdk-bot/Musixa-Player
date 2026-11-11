@@ -100,6 +100,34 @@ class AdService extends ChangeNotifier {
     );
   }
 
+  /// Show Rewarded Video Ad with callback
+  Future<bool> showRewardedAd({required VoidCallback onRewardEarned}) async {
+    if (_rewardedAd != null) {
+      _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (ad) {
+          ad.dispose();
+          loadRewardedAd();
+        },
+        onAdFailedToShowFullScreenContent: (ad, error) {
+          ad.dispose();
+          loadRewardedAd();
+        },
+      );
+
+      _rewardedAd!.show(
+        onUserEarnedReward: (ad, reward) {
+          onRewardEarned();
+        },
+      );
+      _rewardedAd = null;
+      _isRewardedAdLoaded = false;
+      return true;
+    } else {
+      loadRewardedAd();
+      return false;
+    }
+  }
+
   /// Show Rewarded Video Ad to unlock Pro features (e.g. 3D Bass Boost / Equalizer for 24h)
   void showRewardedAdForProUnlock({required VoidCallback onUnlocked}) {
     if (_rewardedAd != null) {

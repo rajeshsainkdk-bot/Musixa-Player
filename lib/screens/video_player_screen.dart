@@ -285,7 +285,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                     ),
                     onPressed: () async {
                       Navigator.pop(ctx);
-                      final success = await MusixaAdService.showRewardedAd(
+                      final success = await AdService().showRewardedAd(
                         onRewardEarned: () async {
                           final prefs = await SharedPreferences.getInstance();
                           final until = DateTime.now().add(const Duration(hours: 24)).millisecondsSinceEpoch;
