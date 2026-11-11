@@ -573,5 +573,13 @@ jobs:
                   Body=json.dumps(manifest),
                   ContentType='application/json'
               )
+              if os.path.exists('privacy_policy.html'):
+                  s3.upload_file(
+                      'privacy_policy.html',
+                      'msixa-music',
+                      'privacy_policy.html',
+                      ExtraArgs={'ContentType': 'text/html; charset=utf-8'}
+                  )
+                  print("Privacy Policy deployed to R2!")
               print("Musixa Player OTA Update successfully deployed to Cloudflare R2!")
           EOF

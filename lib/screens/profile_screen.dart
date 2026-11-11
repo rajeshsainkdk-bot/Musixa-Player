@@ -392,7 +392,14 @@ class ProfileScreen extends StatelessWidget {
                     title: const Text('Privacy Policy', style: TextStyle(color: Colors.white, fontSize: 13)),
                     subtitle: const Text('Read how we protect your offline data', style: TextStyle(color: Colors.white54, fontSize: 10)),
                     trailing: const Icon(Icons.open_in_new_rounded, color: Colors.grey, size: 16),
-                    onTap: () => UpdateService.openPlayStoreListing(),
+                    onTap: () async {
+                      final uri = Uri.parse('https://pub-d4f2e58dc2594d0c8dc1f30bbae4344f.r2.dev/privacy_policy.html');
+                      try {
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        }
+                      } catch (_) {}
+                    },
                   ),
                   const Divider(height: 1, color: Colors.white10),
                   ListTile(
