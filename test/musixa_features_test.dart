@@ -4,6 +4,8 @@ import 'package:musixa_player/models/song.dart';
 import 'package:musixa_player/models/folder_hierarchy.dart';
 import 'package:musixa_player/services/cloud_backend_service.dart';
 import 'package:musixa_player/services/device_audio_service.dart';
+import 'package:musixa_player/models/video_item.dart';
+import 'package:musixa_player/services/device_video_service.dart';
 
 void main() {
   group('1. Song Model & SubCategory Tests', () {
@@ -301,6 +303,60 @@ void main() {
       // Verify SongThumbnailWidget.isGenericMicUrl correctly identifies placeholders
       expect(songNoCover.coverUrl.isEmpty, isTrue);
       expect(songMicCover.coverUrl.contains('1511671782779'), isTrue);
+    });
+  });
+
+  group('8. Video Player & AI Clarity Super-Resolution Tests', () {
+    test('VideoItem model correctly calculates formatted duration & size', () {
+      final v1 = VideoItem(
+        id: 'vid_1',
+        title: 'Dance Performance',
+        displayName: 'Dance_Performance.mp4',
+        path: '/storage/emulated/0/DCIM/Camera/Dance_Performance.mp4',
+        duration: 255000, // 4 mins 15 secs
+        size: 52428800,   // 50 MB
+        resolution: '1080p',
+        folder: 'Camera',
+      );
+
+      expect(v1.formattedDuration, '04:15');
+      expect(v1.formattedSize, '50.0 MB');
+      expect(v1.resolution, '1080p');
+      expect(v1.folder, 'Camera');
+
+      final json = v1.toJson();
+      final restored = VideoItem.fromJson(json);
+      expect(restored.title, 'Dance Performance');
+      expect(restored.formattedDuration, '04:15');
+      expect(restored.size, 52428800);
+    });
+
+    test('VideoItem handles hour-long videos and gigabyte sizes', () {
+      final v2 = VideoItem(
+        id: 'vid_2',
+        title: 'Full Concert Live',
+        displayName: 'concert.mkv',
+        path: '/storage/emulated/0/Movies/concert.mkv',
+        duration: 4500000, // 1 hour 15 mins
+        size: 1610612736,  // ~1.5 GB
+        resolution: '4K',
+        folder: 'Movies',
+      );
+
+      expect(v2.formattedDuration, '01:15:00');
+      expect(v2.formattedSize, '1.5 GB');
+      expect(v2.resolution, '4K');
+    });
+
+    test('DeviceVideoService groups videos by folder accurately', () {
+      final v1 = VideoItem(id: '1', title: 'V1', displayName: 'V1.mp4', path: '', duration: 0, size: 0, folder: 'Camera');
+      final v2 = VideoItem(id: '2', title: 'V2', displayName: 'V2.mp4', path: '', duration: 0, size: 0, folder: 'Camera');
+      final v3 = VideoItem(id: '3', title: 'V3', displayName: 'V3.mp4', path: '', duration: 0, size: 0, folder: 'WhatsApp');
+
+      final map = DeviceVideoService.groupVideosByFolder([v1, v2, v3]);
+      expect(map.keys.length, 2);
+      expect(map['Camera']!.length, 2);
+      expect(map['WhatsApp']!.length, 1);
     });
   });
 }

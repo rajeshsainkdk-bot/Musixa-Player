@@ -194,9 +194,13 @@ class LanguageService extends ChangeNotifier {
 
     // Navigation & Global UI
     'nav_discover': {'hi': 'डिस्कवर (Discover)', 'en': 'Discover'},
+    'nav_videos': {'hi': 'वीडियो (Videos)', 'en': 'Videos'},
     'nav_search': {'hi': 'सर्च (Search)', 'en': 'Search'},
     'nav_library': {'hi': 'लाइब्रेरी (Library)', 'en': 'Library'},
     'nav_sound_fx': {'hi': 'साउंड FX', 'en': 'Sound FX'},
+    'default_player_title': {'hi': 'डिफ़ॉल्ट ऑडियो-वीडियो प्लेयर बनाएं', 'en': 'Set as Default Media Player'},
+    'default_player_desc': {'hi': 'डिवाइस के सभी गाने और वीडियो सीधे Musixa Player में चलाने के लिए परमिशन दें।', 'en': 'Play all your songs and videos seamlessly in Musixa Player.'},
+    'default_player_btn': {'hi': 'डिफ़ॉल्ट सेट करें व शुरू करें', 'en': 'Set as Default & Continue'},
     'your_library': {'hi': 'आपकी लाइब्रेरी', 'en': 'Your Library'},
     'search_title': {'hi': 'सर्च व एक्सप्लोर', 'en': 'Search & Explore'},
     'search_hint': {'hi': 'गाने, आर्टिस्ट या शैली खोजें...', 'en': 'Search songs, artists, or genres...'},
