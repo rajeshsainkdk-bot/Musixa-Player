@@ -480,6 +480,19 @@ class CloudBackendService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Permanently deletes the current user account and purges user data (Google Play Policy Compliance)
+  Future<void> deleteAccount() async {
+    if (_currentUser != null) {
+      final userPhone = _currentUser!.phoneNumber;
+      _allUsers.removeWhere((u) => u.phoneNumber == userPhone);
+      _currentUser = null;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_keyCurrentUser);
+      await _persistUsers();
+      notifyListeners();
+    }
+  }
+
   // ==========================================
   // SONG UPLOAD & DUPLICATE DETECTION
   // ==========================================

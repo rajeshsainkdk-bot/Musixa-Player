@@ -427,8 +427,8 @@ class ProfileScreen extends StatelessWidget {
             // 4. Sign Out Button
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.redAccent,
-                side: BorderSide(color: Colors.redAccent.withOpacity(0.5)),
+                foregroundColor: Colors.orangeAccent,
+                side: BorderSide(color: Colors.orangeAccent.withOpacity(0.5)),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
@@ -438,6 +438,21 @@ class ProfileScreen extends StatelessWidget {
                 style: GoogleFonts.syne(fontSize: 14, fontWeight: FontWeight.bold),
               ),
               onPressed: () => _confirmSignOut(context, backend, lang),
+            ),
+            const SizedBox(height: 12),
+
+            // 5. Delete Account Button (Google Play Data Safety & User Privacy Policy)
+            TextButton.icon(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.redAccent.withOpacity(0.8),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+              ),
+              icon: const Icon(Icons.delete_forever_rounded, size: 16),
+              label: Text(
+                lang.isHindi ? 'खाता स्थायी रूप से हटाएं (Delete Account)' : 'Delete Account & Data',
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+              ),
+              onPressed: () => _confirmDeleteAccount(context, backend, lang),
             ),
             const SizedBox(height: 16),
 
@@ -527,6 +542,61 @@ class ProfileScreen extends StatelessWidget {
             },
             child: Text(
               lang.isHindi ? 'हाँ, लॉग आउट करें' : 'Yes, Sign Out',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteAccount(BuildContext context, CloudBackendService backend, LanguageService lang) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF131A2A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: const [
+            Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 22),
+            SizedBox(width: 8),
+            Text(
+              'Delete Account',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+          ],
+        ),
+        content: Text(
+          lang.isHindi
+              ? 'क्या आप अपना खाता और सभी संबंधित डेटा स्थायी रूप से हटाना चाहते हैं? यह क्रिया वापस नहीं ली जा सकती।'
+              : 'Are you sure you want to permanently delete your account and personal data? This action is permanent and cannot be undone.',
+          style: const TextStyle(color: Colors.white70, fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(lang.t('cancel'), style: const TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              Navigator.pop(context);
+              await backend.deleteAccount();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Your account and data have been permanently deleted.'),
+                    backgroundColor: Color(0xFFDC2626),
+                  ),
+                );
+              }
+            },
+            child: Text(
+              lang.isHindi ? 'हाँ, खाता हटाएं' : 'Permanently Delete',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
