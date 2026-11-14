@@ -9,6 +9,7 @@ import '../services/catalog_service.dart';
 import '../services/storage_service.dart';
 import '../services/device_audio_service.dart';
 import '../services/cloud_backend_service.dart';
+import '../services/song_artwork_resolver.dart';
 
 class PlayerProvider extends ChangeNotifier {
   final AudioPlayerService _audioService = AudioPlayerService();
