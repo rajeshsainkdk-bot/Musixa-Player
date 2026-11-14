@@ -127,6 +127,10 @@ class PlayerProvider extends ChangeNotifier {
       notifyListeners();
     });
 
+    _audioService.currentIndexStream.listen((index) {
+      notifyListeners();
+    });
+
     // 2. Load cached persistence (scoped to current user's phone if signed in)
     final currentUserPhone = CloudBackendService().currentUser?.phoneNumber;
     _favorites = await _storageService.loadFavorites(currentUserPhone);
@@ -307,13 +311,42 @@ class PlayerProvider extends ChangeNotifier {
 
   // User Custom Playlists Management
   void createPlaylist(String title, [List<Song>? initialSongs]) {
+    final cleanTitle = title.trim();
+    if (cleanTitle.isEmpty) return;
+
+    // Check if playlist with identical title already exists
+    final existingIdx = _customPlaylists.indexWhere(
+      (p) => p.title.trim().toLowerCase() == cleanTitle.toLowerCase(),
+    );
+
+    if (existingIdx != -1) {
+      if (initialSongs != null && initialSongs.isNotEmpty) {
+        final existing = _customPlaylists[existingIdx];
+        final existingIds = existing.songs.map((s) => s.id).toSet();
+        final newSongs = initialSongs.where((s) => !existingIds.contains(s.id)).toList();
+        if (newSongs.isNotEmpty) {
+          final updatedSongs = [...existing.songs, ...newSongs];
+          _customPlaylists[existingIdx] = existing.copyWith(
+            songs: updatedSongs,
+            coverUrl: existing.coverUrl.isNotEmpty ? existing.coverUrl : newSongs.first.displayCoverUrl,
+          );
+          _storageService.saveCustomPlaylists(
+            _customPlaylists,
+            CloudBackendService().currentUser?.phoneNumber,
+          );
+          notifyListeners();
+        }
+      }
+      return;
+    }
+
     final newPlaylist = Playlist(
       id: 'pl_${DateTime.now().millisecondsSinceEpoch}',
-      title: title.trim(),
+      title: cleanTitle,
       description: 'Created by you',
       coverUrl: initialSongs?.isNotEmpty == true
-          ? initialSongs!.first.coverUrl
-          : 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&q=80',
+          ? initialSongs!.first.displayCoverUrl
+          : SongArtworkResolver.resolveArtwork(title: cleanTitle, artist: 'Playlist'),
       songs: initialSongs ?? [],
     );
     _customPlaylists.insert(0, newPlaylist);
