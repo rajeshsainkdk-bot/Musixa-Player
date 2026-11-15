@@ -165,13 +165,36 @@ jobs:
               private var initialMediaMime: String? = null
               private var initialMediaName: String? = null
               private var syncAudioPlayer: MediaPlayer? = null
+              private var isVideoPlaying = false
 
               override fun onCreate(savedInstanceState: Bundle?) {
                   super.onCreate(savedInstanceState)
-                  val lp = window.attributes
-                  lp.screenBrightness = android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
-                  window.attributes = lp
+                  resetBrightnessToDefault()
                   handleIncomingIntent(intent)
+              }
+
+              override fun onResume() {
+                  super.onResume()
+                  if (!isVideoPlaying) {
+                      resetBrightnessToDefault()
+                  }
+              }
+
+              override fun onWindowFocusChanged(hasFocus: Boolean) {
+                  super.onWindowFocusChanged(hasFocus)
+                  if (hasFocus && !isVideoPlaying) {
+                      resetBrightnessToDefault()
+                  }
+              }
+
+              private fun resetBrightnessToDefault() {
+                  runOnUiThread {
+                      try {
+                          val lp = window.attributes
+                          lp.screenBrightness = android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+                          window.attributes = lp
+                      } catch (_: Exception) {}
+                  }
               }
 
               override fun onNewIntent(intent: Intent) {
@@ -211,8 +234,10 @@ jobs:
                               runOnUiThread {
                                   val lp = window.attributes
                                   if (brightness < 0) {
+                                      isVideoPlaying = false
                                       lp.screenBrightness = android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
                                   } else {
+                                      isVideoPlaying = true
                                       lp.screenBrightness = brightness.coerceIn(0.01f, 1.0f)
                                   }
                                   window.attributes = lp
@@ -901,33 +926,46 @@ jobs:
           if os.path.exists(apk_path):
               size_mb = round(os.path.getsize(apk_path) / (1024 * 1024), 2)
               print(f"Uploading {apk_path} ({size_mb} MB) to R2 update/musixa_player_latest.apk...")
-              s3.upload_file(
-                  apk_path,
-                  'musixa-music',
-                  'update/musixa_player_latest.apk',
-                  ExtraArgs={'ContentType': 'application/vnd.android.package-archive'}
-              )
+              for bucket in ['musixa-music', 'msixa-music']:
+                  try:
+                      s3.upload_file(
+                          apk_path,
+                          bucket,
+                          'update/musixa_player_latest.apk',
+                          ExtraArgs={'ContentType': 'application/vnd.android.package-archive'}
+                      )
+                  except Exception as ex:
+                      print(f"Warning: upload to {bucket} failed: {ex}")
+
               manifest = {
                   'version_code': run_num,
                   'version_name': f"1.0.{run_num}",
-                  'apk_url': 'https://25622df2e6919b63cf30e7d06532d778.r2.cloudflarestorage.com/musixa-music/update/musixa_player_latest.apk',
+                  'apk_url': 'https://pub-d4f2e58dc2594d0c8dc1f30bbae4344f.r2.dev/update/musixa_player_latest.apk',
                   'file_size_mb': size_mb,
-                  'release_notes': "Musixa Player Pro: Authentic MX Player Video UI, real video thumbnails, subtitle badges, and gesture HUD controls!",
+                  'release_notes': "Musixa Player: Default English UI, auto-popup prompt, and video performance enhancements!",
                   'force_update': False
               }
-              s3.put_object(
-                  Bucket='musixa-music',
-                  Key='update/musixa_player_version.json',
-                  Body=json.dumps(manifest),
-                  ContentType='application/json'
-              )
+              for bucket in ['musixa-music', 'msixa-music']:
+                  try:
+                      s3.put_object(
+                          Bucket=bucket,
+                          Key='update/musixa_player_version.json',
+                          Body=json.dumps(manifest),
+                          ContentType='application/json'
+                      )
+                  except Exception as ex:
+                      print(f"Warning: manifest to {bucket} failed: {ex}")
+
               if os.path.exists('privacy_policy.html'):
-                  s3.upload_file(
-                      'privacy_policy.html',
-                      'musixa-music',
-                      'privacy_policy.html',
-                      ExtraArgs={'ContentType': 'text/html; charset=utf-8'}
-                  )
-                  print("Privacy Policy deployed to R2!")
+                  try:
+                      s3.upload_file(
+                          'privacy_policy.html',
+                          'musixa-music',
+                          'privacy_policy.html',
+                          ExtraArgs={'ContentType': 'text/html; charset=utf-8'}
+                      )
+                      print("Privacy Policy deployed to R2!")
+                  except Exception as ex:
+                      print(f"Privacy policy upload warning: {ex}")
               print("Musixa Player OTA Update successfully deployed to Cloudflare R2!")
           EOF

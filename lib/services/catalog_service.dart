@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import '../models/song.dart';
 import '../models/playlist.dart';
 import 'cloud_backend_service.dart';
+import 'ai_music_service.dart';
+import 'ai_artwork_service.dart';
 
 class CatalogService {
   static const String _jamendoClientId = '56d30c95';

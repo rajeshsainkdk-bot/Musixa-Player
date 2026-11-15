@@ -202,8 +202,8 @@ void main() {
       );
 
       expect(
-        CloudBackendService.formatSmartTitle('à¤¹à¤¨à¥à¤®à¤¾à¤¨ à¤šà¤¾à¤²à¥€à¤¸à¤¾ (Official Video) 1'),
-        'à¤¹à¤¨à¥à¤®à¤¾à¤¨ à¤šà¤¾à¤²à¥€à¤¸à¤¾',
+        CloudBackendService.formatSmartTitle('हनुमान चालीसा (Official Video) 1'),
+        'हनुमान चालीसा',
       );
     });
   });
