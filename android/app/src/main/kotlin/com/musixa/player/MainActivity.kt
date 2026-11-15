@@ -379,11 +379,12 @@ class MainActivity: AudioServiceActivity() {
                                 } catch (_: Throwable) {}
                             }
 
-                            if (bitmap != null) {
+                            val bmp = bitmap
+                            if (bmp != null) {
                                 val stream = java.io.ByteArrayOutputStream()
-                                bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 75, stream)
+                                bmp.compress(android.graphics.Bitmap.CompressFormat.JPEG, 75, stream)
                                 val bytes = stream.toByteArray()
-                                bitmap.recycle()
+                                bmp.recycle()
                                 runOnUiThread { result.success(bytes) }
                             } else {
                                 runOnUiThread { result.success(null) }
@@ -416,7 +417,8 @@ class MainActivity: AudioServiceActivity() {
                                 }
                             }
 
-                            if (bitmap != null) {
+                            val bmp = bitmap
+                            if (bmp != null) {
                                 val fileName = "Musixa_${System.currentTimeMillis()}.jpg"
                                 var saved = false
                                 var savedPath = ""
@@ -431,7 +433,7 @@ class MainActivity: AudioServiceActivity() {
                                     val uri = ctx.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
                                     if (uri != null) {
                                         ctx.contentResolver.openOutputStream(uri)?.use { out ->
-                                            bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 95, out)
+                                            bmp.compress(android.graphics.Bitmap.CompressFormat.JPEG, 95, out)
                                         }
                                         values.clear()
                                         values.put(MediaStore.Images.Media.IS_PENDING, 0)
@@ -445,13 +447,13 @@ class MainActivity: AudioServiceActivity() {
                                     if (!dir.exists()) dir.mkdirs()
                                     val file = java.io.File(dir, fileName)
                                     java.io.FileOutputStream(file).use { out ->
-                                        bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 95, out)
+                                        bmp.compress(android.graphics.Bitmap.CompressFormat.JPEG, 95, out)
                                     }
                                     android.media.MediaScannerConnection.scanFile(ctx, arrayOf(file.absolutePath), arrayOf("image/jpeg"), null)
                                     saved = true
                                     savedPath = file.absolutePath
                                 }
-                                bitmap.recycle()
+                                bmp.recycle()
                                 runOnUiThread { result.success(mapOf("success" to saved, "path" to savedPath)) }
                             } else {
                                 runOnUiThread { result.success(mapOf("success" to false)) }
