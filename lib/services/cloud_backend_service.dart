@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import '../models/user_profile.dart';
 import '../models/song.dart';
+import '../models/playlist.dart';
 import 'catalog_service.dart';
 import 'r2_storage_service.dart';
 import 'ai_artwork_service.dart';
@@ -23,15 +24,17 @@ class CloudBackendService extends ChangeNotifier {
   static const String _keyAllUsers = 'musixa_all_registered_users';
   static const String _keyCommunitySongs = 'musixa_community_songs';
   static const String _keyDeletedSongIds = 'musixa_deleted_song_ids_v1';
-  static const String _keyCatalogSeeded = 'musixa_catalog_seeded_v1';
+  static const String _keyCloudPlaylists = 'musixa_cloud_playlists_v1';
+  static const String _keyCatalogSeeded = 'musixa_catalog_seeded_v3';
   static const String _adminPin = '7777'; // Default Admin Master Key
 
-  // Shared file paths across Musixa User App and Musixa Admin App
+  // Shared file paths across User App and Admin App
   static final List<String> _sharedUserFilePaths = [
     '/data/data/com.musixa.player/files/musixa_shared_users.json',
     '/data/data/com.musixa.admin/files/musixa_shared_users.json',
     '/data/user/0/com.musixa.player/files/musixa_shared_users.json',
     '/data/user/0/com.musixa.admin/files/musixa_shared_users.json',
+    '/data/data/com.musixa.musixa_player/files/musixa_shared_users.json',
     '/storage/emulated/0/Download/musixa_shared_users.json',
     '/sdcard/Download/musixa_shared_users.json',
   ];
@@ -41,6 +44,7 @@ class CloudBackendService extends ChangeNotifier {
     '/data/data/com.musixa.admin/files/musixa_shared_songs.json',
     '/data/user/0/com.musixa.player/files/musixa_shared_songs.json',
     '/data/user/0/com.musixa.admin/files/musixa_shared_songs.json',
+    '/data/data/com.musixa.musixa_player/files/musixa_shared_songs.json',
     '/storage/emulated/0/Download/musixa_shared_songs.json',
     '/sdcard/Download/musixa_shared_songs.json',
   ];
@@ -50,14 +54,26 @@ class CloudBackendService extends ChangeNotifier {
     '/data/data/com.musixa.admin/files/musixa_deleted_songs.json',
     '/data/user/0/com.musixa.player/files/musixa_deleted_songs.json',
     '/data/user/0/com.musixa.admin/files/musixa_deleted_songs.json',
+    '/data/data/com.musixa.musixa_player/files/musixa_deleted_songs.json',
     '/storage/emulated/0/Download/musixa_deleted_songs.json',
     '/sdcard/Download/musixa_deleted_songs.json',
+  ];
+
+  static final List<String> _sharedPlaylistFilePaths = [
+    '/data/data/com.musixa.player/files/musixa_shared_playlists.json',
+    '/data/data/com.musixa.admin/files/musixa_shared_playlists.json',
+    '/data/user/0/com.musixa.player/files/musixa_shared_playlists.json',
+    '/data/user/0/com.musixa.admin/files/musixa_shared_playlists.json',
+    '/data/data/com.musixa.musixa_player/files/musixa_shared_playlists.json',
+    '/storage/emulated/0/Download/musixa_shared_playlists.json',
+    '/sdcard/Download/musixa_shared_playlists.json',
   ];
 
   UserProfile? _currentUser;
   final List<UserProfile> _allUsers = [];
   final List<Song> _communitySongs = [];
   final Set<String> _deletedSongIds = {};
+  final List<Playlist> _sharedPlaylists = [];
 
   // Temporary Verification State
   String? _generatedPhoneOtp;
@@ -94,6 +110,7 @@ class CloudBackendService extends ChangeNotifier {
     return list;
   }
   Set<String> get deletedSongIds => Set.unmodifiable(_deletedSongIds);
+  List<Playlist> get cloudPlaylists => List.unmodifiable(_sharedPlaylists);
 
   int get totalUsersCount => _allUsers.length;
   int get activeUsersCount {
@@ -146,8 +163,7 @@ class CloudBackendService extends ChangeNotifier {
     _deletedSongIds.clear();
     _deletedSongIds.addAll(deletedRaw);
 
-    // 3. Load Songs (Pending + Approved)
-    final isCatalogSeeded = prefs.getBool(_keyCatalogSeeded) ?? false;
+    // 3. Load Songs from Local Cache first for instant display
     final songsRaw = prefs.getStringList(_keyCommunitySongs);
     _communitySongs.clear();
     if (songsRaw != null) {
@@ -161,7 +177,24 @@ class CloudBackendService extends ChangeNotifier {
       }
     }
 
-    // Seed initial curated catalog ONLY ONCE on very first fresh install
+    // 3.5 Load Cached Cloud Playlists for instant offline display
+    final plRaw = prefs.getStringList(_keyCloudPlaylists);
+    _sharedPlaylists.clear();
+    if (plRaw != null) {
+      for (final raw in plRaw) {
+        try {
+          _sharedPlaylists.add(Playlist.fromJson(jsonDecode(raw)));
+        } catch (_) {}
+      }
+    }
+
+    // 4. Synchronize with Cloudflare R2 Remote Cloud Database FIRST!
+    await _loadSharedUsers();
+    await _loadSharedSongs();
+    await _loadSharedPlaylists();
+
+    // 5. Seed initial curated catalog ONLY if BOTH local and cloud are completely empty
+    final isCatalogSeeded = prefs.getBool(_keyCatalogSeeded) ?? false;
     if (!isCatalogSeeded && _deletedSongIds.isEmpty && _communitySongs.isEmpty) {
       for (final s in CatalogService.getCuratedSongs()) {
         if (!_deletedSongIds.contains(s.id) && !_communitySongs.any((existing) => existing.id == s.id)) {
@@ -169,14 +202,12 @@ class CloudBackendService extends ChangeNotifier {
         }
       }
       await prefs.setBool(_keyCatalogSeeded, true);
-      await _persistSongs();
+      // ONLY save to local device cache - NEVER overwrite R2 on fresh install!
+      final rawList = _communitySongs.map((s) => jsonEncode(s.toJson())).toList();
+      await prefs.setStringList(_keyCommunitySongs, rawList);
     } else if (!isCatalogSeeded) {
       await prefs.setBool(_keyCatalogSeeded, true);
     }
-
-    // 4. Synchronize with cross-app shared storage on device
-    await _loadSharedUsers();
-    await _loadSharedSongs();
 
     // Heartbeat for current user
     if (_currentUser != null) {
@@ -264,6 +295,7 @@ class CloudBackendService extends ChangeNotifier {
     _allUsers.add(user);
     _currentUser = user;
     await _persistUsers();
+    await _loadSharedSongs(); // Instantly pull all cloud songs into memory
     notifyListeners();
     return user;
   }
@@ -307,6 +339,7 @@ class CloudBackendService extends ChangeNotifier {
     _currentUser = user;
 
     await _persistUsers();
+    await _loadSharedSongs(); // Instantly pull all cloud songs into memory
     notifyListeners();
     return user;
   }
@@ -370,6 +403,7 @@ class CloudBackendService extends ChangeNotifier {
 
     _currentUser = user;
     await _persistUsers();
+    await _loadSharedSongs(); // Instantly pull all cloud songs into memory
     notifyListeners();
     return user;
   }
@@ -389,7 +423,7 @@ class CloudBackendService extends ChangeNotifier {
     _generatedPhoneOtp = code;
 
     debugPrint('====================================');
-    debugPrint('📲 SMS OTP generated for $_pendingPhone: $code');
+    debugPrint('ðŸ“² SMS OTP generated for $_pendingPhone: $code');
     debugPrint('====================================');
 
     await Future.delayed(const Duration(milliseconds: 300));
@@ -407,7 +441,7 @@ class CloudBackendService extends ChangeNotifier {
       final newUser = UserProfile(
         uid: uid,
         fullName: _pendingName ?? 'Listener',
-        email: _pendingEmail ?? 'user@Musixa.com',
+        email: _pendingEmail ?? 'user@musixa.com',
         isEmailVerified: true,
         phoneNumber: _pendingPhone ?? '',
         isPhoneVerified: true,
@@ -444,7 +478,7 @@ class CloudBackendService extends ChangeNotifier {
         orElse: () => UserProfile(
           uid: 'admin_master_01',
           fullName: 'Musixa Super Admin',
-          email: 'admin@Musixa.com',
+          email: 'admin@musixa.com',
           isEmailVerified: true,
           phoneNumber: '+919999999999',
           isPhoneVerified: true,
@@ -479,19 +513,6 @@ class CloudBackendService extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_keyCurrentUser);
     notifyListeners();
-  }
-
-  /// Permanently deletes the current user account and purges user data (Google Play Policy Compliance)
-  Future<void> deleteAccount() async {
-    if (_currentUser != null) {
-      final userPhone = _currentUser!.phoneNumber;
-      _allUsers.removeWhere((u) => u.phoneNumber == userPhone);
-      _currentUser = null;
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_keyCurrentUser);
-      await _persistUsers();
-      notifyListeners();
-    }
   }
 
   // ==========================================
@@ -645,8 +666,8 @@ class CloudBackendService extends ChangeNotifier {
       album: album.trim().isEmpty ? 'Community Uploads' : album.trim(),
       duration: 210,
       streamUrl: audioPath,
-      coverUrl: coverUrl?.trim().isNotEmpty == true
-          ? coverUrl!.trim()
+      coverUrl: (coverUrl != null && coverUrl.trim().isNotEmpty && !coverUrl.contains('1511671782779'))
+          ? coverUrl.trim()
           : SongArtworkResolver.resolveArtwork(
               title: title.trim(),
               artist: artist.trim(),
@@ -694,8 +715,8 @@ class CloudBackendService extends ChangeNotifier {
       album: album?.trim().isNotEmpty == true ? album!.trim() : 'Musixa Originals',
       duration: 220,
       streamUrl: audioPath.trim(),
-      coverUrl: coverUrl?.trim().isNotEmpty == true
-          ? coverUrl!.trim()
+      coverUrl: (coverUrl != null && coverUrl.trim().isNotEmpty && !coverUrl.contains('1511671782779'))
+          ? coverUrl.trim()
           : SongArtworkResolver.resolveArtwork(
               title: title.trim(),
               artist: artist.trim(),
@@ -730,6 +751,10 @@ class CloudBackendService extends ChangeNotifier {
     final index = _communitySongs.indexWhere((s) => s.id == songId);
     if (index != -1) {
       final existing = _communitySongs[index];
+      final cleanCover = (coverUrl?.trim().isNotEmpty == true && !coverUrl!.contains('1511671782779'))
+          ? coverUrl!.trim()
+          : (existing.coverUrl.contains('1511671782779') ? '' : existing.coverUrl);
+
       _communitySongs[index] = existing.copyWith(
         title: title.trim(),
         artist: artist.trim(),
@@ -737,16 +762,23 @@ class CloudBackendService extends ChangeNotifier {
         genre: genre.trim(),
         subCategory: subCategory?.trim(),
         streamUrl: streamUrl.trim(),
-        coverUrl: coverUrl?.trim().isNotEmpty == true ? coverUrl!.trim() : existing.coverUrl,
+        coverUrl: cleanCover,
       );
       await _persistSongs();
+      try {
+        final r2 = R2StorageService();
+        if (r2.isConfigured) {
+          final jsonContent = jsonEncode(_communitySongs.map((s) => s.toJson()).toList());
+          await r2.putString('db/songs.json', jsonContent);
+        }
+      } catch (_) {}
       notifyListeners();
       return true;
     }
     return false;
   }
 
-  /// Approve a pending song — instantly publishes to all users!
+  /// Approve a pending song â€” instantly publishes to all users!
   Future<void> approveSong(String songId) async {
     final index = _communitySongs.indexWhere((s) => s.id == songId);
     if (index != -1) {
@@ -827,11 +859,11 @@ class CloudBackendService extends ChangeNotifier {
         } catch (_) {}
       }
 
-      // 2. Sync to Cloudflare R2
+      // 2. Sync to Cloudflare R2 (Strictly Admin only to protect cloud catalog)
       final r2 = R2StorageService();
-      if (r2.isConfigured) {
+      if (r2.isConfigured && (isAdmin || _currentUser?.role == 'admin')) {
         await r2.putString('db/deleted_songs.json', jsonContent);
-        debugPrint('✅ Persisted ${_deletedSongIds.length} deleted song IDs to Cloudflare R2');
+        debugPrint('âœ… Persisted ${_deletedSongIds.length} deleted song IDs to Cloudflare R2');
       }
     } catch (e) {
       debugPrint('Error persisting deleted songs: $e');
@@ -865,10 +897,10 @@ class CloudBackendService extends ChangeNotifier {
       final r2 = R2StorageService();
       if (r2.isConfigured) {
         final success = await r2.putString('db/users.json', jsonContent);
-        debugPrint('✅ Persisted ${_allUsers.length} users to Cloudflare R2: success=$success');
+        debugPrint('âœ… Persisted ${_allUsers.length} users to Cloudflare R2: success=$success');
       }
     } catch (e) {
-      debugPrint('❌ Cloud R2 persist users error: $e');
+      debugPrint('âŒ Cloud R2 persist users error: $e');
     }
   }
 
@@ -891,28 +923,29 @@ class CloudBackendService extends ChangeNotifier {
       }
     }
 
-    // Sync to Cloudflare R2 cloud database (Awaited)
+    // Sync to Cloudflare R2 cloud database (Awaited - STRICTLY Admin only to prevent user app overwrite!)
     try {
       final r2 = R2StorageService();
-      if (r2.isConfigured) {
+      if (r2.isConfigured && (isAdmin || _currentUser?.role == 'admin')) {
         final success = await r2.putString('db/songs.json', jsonContent);
-        debugPrint('✅ Persisted ${_communitySongs.length} songs to Cloudflare R2: success=$success');
+        debugPrint('âœ… Persisted ${_communitySongs.length} songs to Cloudflare R2: success=$success');
       }
     } catch (e) {
-      debugPrint('❌ Cloud R2 persist songs error: $e');
+      debugPrint('âŒ Cloud R2 persist songs error: $e');
     }
   }
 
   bool _isSyncing = false;
 
   /// Public Sync Method: Reloads shared data across both User & Admin apps
-  Future<void> syncSharedData() async {
-    if (_isSyncing) return;
+  Future<void> syncSharedData({bool force = false, bool forceNotify = false}) async {
+    if (_isSyncing && !force) return;
     _isSyncing = true;
     try {
       final usersChanged = await _loadSharedUsers();
       final songsChanged = await _loadSharedSongs();
-      if (usersChanged || songsChanged) {
+      final playlistsChanged = await _loadSharedPlaylists();
+      if (usersChanged || songsChanged || playlistsChanged || forceNotify) {
         notifyListeners();
       }
     } catch (e) {
@@ -921,6 +954,9 @@ class CloudBackendService extends ChangeNotifier {
       _isSyncing = false;
     }
   }
+
+  Future<void> syncWithCloud({bool force = false, bool forceNotify = false}) async =>
+      await syncSharedData(force: force, forceNotify: forceNotify);
 
   Future<bool> _loadSharedUsers() async {
     bool hasChanges = false;
@@ -1093,12 +1129,12 @@ class CloudBackendService extends ChangeNotifier {
       final List<dynamic> jsonList = jsonDecode(content);
       for (final item in jsonList) {
         try {
-          var song = Song.fromJson(item as Map<String, dynamic>);
+          Song song = Song.fromJson(item as Map<String, dynamic>);
           // NEVER add back a deleted song!
           if (_deletedSongIds.contains(song.id)) {
             continue;
           }
-          final cUrl = song.coverUrl.trim().toLowerCase();
+          final cUrl = song.coverUrl.trim();
           final isMicOrEmpty = cUrl.isEmpty ||
               cUrl.contains('1511671782779') ||
               cUrl.contains('photo-1511671782779') ||
@@ -1114,8 +1150,16 @@ class CloudBackendService extends ChangeNotifier {
             _communitySongs.add(song);
             hasChanges = true;
           } else {
-            if (song.status != _communitySongs[idx].status ||
-                song.streamUrl != _communitySongs[idx].streamUrl) {
+            final cur = _communitySongs[idx];
+            if (cur.title != song.title ||
+                cur.artist != song.artist ||
+                cur.album != song.album ||
+                cur.genre != song.genre ||
+                cur.subCategory != song.subCategory ||
+                cur.coverUrl != song.coverUrl ||
+                cur.status != song.status ||
+                cur.streamUrl != song.streamUrl ||
+                cur.duration != song.duration) {
               _communitySongs[idx] = song;
               hasChanges = true;
             }
@@ -1129,6 +1173,108 @@ class CloudBackendService extends ChangeNotifier {
       }
     } catch (_) {}
     return hasChanges;
+  }
+
+  Future<bool> _loadSharedPlaylists() async {
+    bool hasChanges = false;
+
+    // 1. Local Shared Files
+    for (final path in _sharedPlaylistFilePaths) {
+      try {
+        final file = File(path);
+        if (await file.exists()) {
+          final content = await file.readAsString();
+          if (content.trim().isNotEmpty) {
+            if (_mergePlaylistsFromJson(content)) hasChanges = true;
+          }
+        }
+      } catch (_) {}
+    }
+
+    // 2. Cloudflare R2 Remote db/playlists.json
+    try {
+      final r2 = R2StorageService();
+      if (r2.isConfigured) {
+        final cloudJson = await r2.getString('db/playlists.json');
+        if (cloudJson != null && cloudJson.trim().isNotEmpty) {
+          if (_mergePlaylistsFromJson(cloudJson)) hasChanges = true;
+        }
+      }
+    } catch (_) {}
+
+    if (hasChanges) {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setStringList(
+          _keyCloudPlaylists,
+          _sharedPlaylists.map((p) => jsonEncode(p.toJson())).toList(),
+        );
+      } catch (_) {}
+    }
+
+    return hasChanges;
+  }
+
+  bool _mergePlaylistsFromJson(String content) {
+    bool hasChanges = false;
+    try {
+      final List<dynamic> jsonList = jsonDecode(content);
+      for (final item in jsonList) {
+        try {
+          final pl = Playlist.fromJson(item as Map<String, dynamic>);
+          // Filter any deleted songs from playlist
+          pl.songs.removeWhere((s) => _deletedSongIds.contains(s.id));
+          if (pl.songs.isEmpty) continue;
+
+          final idx = _sharedPlaylists.indexWhere((p) => p.id == pl.id || p.title.toLowerCase() == pl.title.toLowerCase());
+          if (idx == -1) {
+            _sharedPlaylists.add(pl);
+            hasChanges = true;
+          } else {
+            if (_sharedPlaylists[idx].songs.length != pl.songs.length) {
+              _sharedPlaylists[idx] = pl;
+              hasChanges = true;
+            }
+          }
+        } catch (_) {}
+      }
+    } catch (_) {}
+    return hasChanges;
+  }
+
+  /// Add or update a cloud playlist and persist to R2 & local shared storage
+  Future<void> addCloudPlaylist(Playlist playlist) async {
+    final idx = _sharedPlaylists.indexWhere((p) => p.id == playlist.id || p.title.toLowerCase() == playlist.title.toLowerCase());
+    if (idx != -1) {
+      _sharedPlaylists[idx] = playlist;
+    } else {
+      _sharedPlaylists.insert(0, playlist);
+    }
+    await _persistPlaylists();
+    notifyListeners();
+  }
+
+  Future<void> _persistPlaylists() async {
+    final jsonStr = jsonEncode(_sharedPlaylists.map((p) => p.toJson()).toList());
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_keyCloudPlaylists, _sharedPlaylists.map((p) => jsonEncode(p.toJson())).toList());
+
+    for (final path in _sharedPlaylistFilePaths) {
+      try {
+        final file = File(path);
+        if (!await file.parent.exists()) await file.parent.create(recursive: true);
+        await file.writeAsString(jsonStr, flush: true);
+      } catch (_) {}
+    }
+
+    if (isAdmin || _currentUser?.role == 'admin') {
+      try {
+        final r2 = R2StorageService();
+        if (r2.isConfigured) {
+          await r2.putString('db/playlists.json', jsonStr);
+        }
+      } catch (_) {}
+    }
   }
 
   // ==========================================
@@ -1159,7 +1305,7 @@ class CloudBackendService extends ChangeNotifier {
       );
     }
 
-    final fileName = 'Musixa_users_export_${DateFormat("yyyyMMdd_HHmm").format(DateTime.now())}.csv';
+    final fileName = 'musixa_users_export_${DateFormat("yyyyMMdd_HHmm").format(DateTime.now())}.csv';
     final targetPaths = [
       '/storage/emulated/0/Download/$fileName',
       '${Directory.systemTemp.path}/$fileName',
@@ -1216,7 +1362,7 @@ class CloudBackendService extends ChangeNotifier {
       );
     }
 
-    final fileName = 'Musixa_uploaded_songs_${DateFormat("yyyyMMdd_HHmm").format(DateTime.now())}.csv';
+    final fileName = 'musixa_uploaded_songs_${DateFormat("yyyyMMdd_HHmm").format(DateTime.now())}.csv';
     final targetPaths = [
       '/storage/emulated/0/Download/$fileName',
       '${Directory.systemTemp.path}/$fileName',
@@ -1245,3 +1391,4 @@ class CloudBackendService extends ChangeNotifier {
     return exportFile;
   }
 }
+
