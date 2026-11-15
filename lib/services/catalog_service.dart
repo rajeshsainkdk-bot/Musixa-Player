@@ -44,6 +44,7 @@ class CatalogService {
   }
 
   /// Get categorized curated playlists
+    /// Get playlists strictly based on Admin uploaded folders and Cloud R2 playlists
   List<Playlist> getCuratedPlaylists({List<Song>? songs}) {
     final backend = CloudBackendService();
     final deleted = backend.deletedSongIds;
@@ -51,84 +52,58 @@ class CatalogService {
         ? backend.approvedSongs.where((s) => !deleted.contains(s.id)).toList()
         : _curatedCatalog.where((s) => !deleted.contains(s.id)).toList());
 
-    final rajasthaniSongs = baseSongs.where((s) => s.genre == 'Rajasthani').toList();
-    final bhaktiSongs = baseSongs.where((s) => s.genre == 'Bhakti' || s.genre == 'Spiritual').toList();
-    final haryanviSongs = baseSongs.where((s) => s.genre == 'Haryanvi').toList();
-    final sufiSongs = baseSongs.where((s) => s.genre == 'Sufi' || s.genre == 'Punjabi').toList();
-    final bollywoodSongs = baseSongs.where((s) => s.genre == 'Bollywood' || s.genre == 'Indie Pop').toList();
-    final lofiSongs = baseSongs.where((s) => s.genre == 'Desi Lo-Fi' || s.genre == 'Ghazal').toList();
-    final spiritualSongs = baseSongs.where((s) => s.genre == 'Spiritual').toList();
-
     final List<Playlist> playlists = [];
+    final Set<String> registeredPlaylistTitles = {};
 
-    if (rajasthaniSongs.isNotEmpty) {
-      playlists.add(Playlist(
-        id: 'pl_rajasthani',
-        title: '🐪 Rangeelo Rajasthan & Marwadi',
-        description: 'Rajasthani Folk, Marwadi DJ, Bhajan & Traditional Beats',
-        coverUrl: 'https://images.unsplash.com/photo-1599827552599-eeddd59551c6?w=600&q=80',
-        songs: rajasthaniSongs,
-      ));
+    // 1. Include all remote Cloud Playlists uploaded to R2 db/playlists.json
+    for (final pl in backend.cloudPlaylists) {
+      if (pl.songs.isNotEmpty && registeredPlaylistTitles.add(pl.title.toLowerCase().trim())) {
+        playlists.add(pl);
+      }
     }
 
-    if (bhaktiSongs.isNotEmpty) {
-      playlists.add(Playlist(
-        id: 'pl_bhakti',
-        title: '🕉️ Divine Bhakti & Mantras',
-        description: 'Hanuman Chalisa, Ashtak, Ram Siya Ram, Radhe Krishna & Shabar Mantras',
-        coverUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=80',
-        songs: bhaktiSongs,
-      ));
+    // 2. Group by Admin Uploaded Folders / Categories
+    final Map<String, List<Song>> folderMap = {};
+    for (final s in baseSongs) {
+      final cleanedSong = AiMusicService().cleanAndOptimizeSong(s);
+
+      // Check subCategory (sub-folder name)
+      final sub = cleanedSong.subCategory?.trim();
+      if (sub != null && sub.isNotEmpty && sub.toLowerCase() != cleanedSong.genre.toLowerCase()) {
+        folderMap.putIfAbsent(sub, () => []).add(cleanedSong);
+      }
+
+      // Check album if not generic (root folder name)
+      final album = cleanedSong.album.trim();
+      final isGenericAlbum = album.isEmpty ||
+          album.toLowerCase() == 'msixa library' ||
+          album.toLowerCase() == 'musixa library' ||
+          album.toLowerCase() == 'unknown album' ||
+          album.toLowerCase() == 'msixa cloud hits' ||
+          album.toLowerCase() == 'jamendo free catalog' ||
+          album.toLowerCase().endsWith('essentials');
+      if (!isGenericAlbum && album != sub) {
+        folderMap.putIfAbsent(album, () => []).add(cleanedSong);
+      }
     }
 
-    if (haryanviSongs.isNotEmpty) {
-      playlists.add(Playlist(
-        id: 'pl_haryanvi',
-        title: '🌾 Haryanvi & Desi Ragni',
-        description: 'Top Haryanvi Hits, Folk & High-Energy Desi Beats',
-        coverUrl: 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=800&q=85',
-        songs: haryanviSongs,
-      ));
-    }
+    // Add each folder as a playlist
+    for (final entry in folderMap.entries) {
+      final title = entry.key;
+      if (entry.value.isNotEmpty && registeredPlaylistTitles.add(title.toLowerCase().trim())) {
+        final cover = entry.value.firstWhere(
+          (s) => s.coverUrl.trim().startsWith('http'),
+          orElse: () => entry.value.first,
+        ).coverUrl;
 
-    if (sufiSongs.isNotEmpty) {
-      playlists.add(Playlist(
-        id: 'pl_sartaaj',
-        title: '🪕 Sufi & Punjabi Classics (Satinder Sartaaj)',
-        description: 'Guzarish, Udaarian, Sajjan Raazi, Tere Bina Na Guzara & Hit Jukebox',
-        coverUrl: 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=800&q=85',
-        songs: sufiSongs,
-      ));
-    }
-
-    if (bollywoodSongs.isNotEmpty) {
-      playlists.add(Playlist(
-        id: 'pl_bollywood',
-        title: '🎬 Bollywood & Indie Melodies',
-        description: 'Ram Siya Ram, Jaiye Sajana, Intezaar Reh Gya & Kagaz Ki Kashti',
-        coverUrl: 'https://images.unsplash.com/photo-1548013146-72479768bada?w=600&q=80',
-        songs: bollywoodSongs,
-      ));
-    }
-
-    if (lofiSongs.isNotEmpty) {
-      playlists.add(Playlist(
-        id: 'pl_lofi',
-        title: '🌙 Late Night Desi Lo-Fi & Ghazals',
-        description: 'Bajrang Baan Lo-Fi, Kagaz Ki Kashti, Intezaar Reh Gya & Soulful Beats',
-        coverUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&q=80',
-        songs: lofiSongs,
-      ));
-    }
-
-    if (spiritualSongs.isNotEmpty) {
-      playlists.add(Playlist(
-        id: 'pl_spiritual',
-        title: '🔱 Aghori & Spiritual Trance',
-        description: 'Alakh Niranjan Aghori, Aadesh Hanuman & Powerful Siddh Shabar Mantra',
-        coverUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&q=80',
-        songs: spiritualSongs,
-      ));
+        playlists.add(Playlist(
+          id: 'pl_folder_${entry.key.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '_')}',
+          title: title,
+          description: 'Folder collection (${entry.value.length} tracks)',
+          coverUrl: cover.startsWith('http') ? cover : AiArtworkService().getAiCoverForSong(entry.value.first),
+          songs: entry.value,
+        ));
+      }
     }
 
     return playlists;
