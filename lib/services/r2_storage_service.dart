@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
@@ -19,19 +19,17 @@ class R2StorageService extends ChangeNotifier {
 
   static const String _prefKeyConfig = 'musixa_r2_config';
 
-  // Cross-app shared file paths between Musixa Player and Musixa Admin
+  // Cross-app shared file paths so Admin App can save R2 keys and User App immediately picks them up
   static final List<String> _sharedConfigFiles = [
-    '/data/data/com.musixa.player/files/musixa_r2_config.json',
+    '/data/data/com.musixa.musixa_player/files/musixa_r2_config.json',
     '/data/data/com.musixa.admin/files/musixa_r2_config.json',
-    '/data/user/0/com.musixa.player/files/musixa_r2_config.json',
-    '/data/user/0/com.musixa.admin/files/musixa_r2_config.json',
     '/storage/emulated/0/Download/musixa_r2_config.json',
     '/sdcard/Download/musixa_r2_config.json',
   ];
 
-  // Production Cloudflare R2 Credentials for Musixa & Msixa
+  // Production Cloudflare R2 Credentials (Pre-configured)
   static const String defaultAccountId = '25622df2e6919b63cf30e7d06532d778';
-  static const String defaultBucketName = 'msixa-music';
+  static const String defaultBucketName = 'musixa-music';
   static const String defaultAccessKeyId = '3857da30609fecfde1e88f56c842f7f1';
   static const String defaultSecretAccessKey = '77ef640b75cc5d1858ef76bb88872d8baeed1c60f581d4ef0280e67a43dd4ddd';
   static const String defaultPublicDomain = 'pub-d4f2e58dc2594d0c8dc1f30bbae4344f.r2.dev';
@@ -40,7 +38,7 @@ class R2StorageService extends ChangeNotifier {
   String? _bucketName = defaultBucketName;
   String? _accessKeyId = defaultAccessKeyId;
   String? _secretAccessKey = defaultSecretAccessKey;
-  String? _publicDomain = defaultPublicDomain; // e.g. "pub-xxxx.r2.dev" or custom domain "music.Musixa.com"
+  String? _publicDomain = defaultPublicDomain; // e.g. "pub-xxxx.r2.dev" or custom domain "music.musixa.com"
 
   bool _isInitialized = false;
 
@@ -247,6 +245,45 @@ class R2StorageService extends ChangeNotifier {
   /// Total Cloudflare R2 Standard Free Plan Quota: 10 GB per month (10,737,418,240 bytes)
   static const int totalFreeQuotaBytes = 10 * 1024 * 1024 * 1024;
 
+  int _locallyTrackedUploadedBytes = 0;
+
+  void recordSongUploaded(int bytes) {
+    _locallyTrackedUploadedBytes += bytes;
+    notifyListeners();
+  }
+
+  void recordSongDeleted(int bytes) {
+    _locallyTrackedUploadedBytes = (_locallyTrackedUploadedBytes - bytes).clamp(0, 100000000000);
+    notifyListeners();
+  }
+
+  Map<String, dynamic> getInstantEstimatedStats({int songsCount = 0}) {
+    final count = songsCount > 0 ? songsCount : 17;
+    final totalObjectsCount = count + 4;
+    final totalBytesUsed = (count * 6.2 * 1024 * 1024).toInt() + (52 * 1024 * 1024) + _locallyTrackedUploadedBytes;
+    final remainingBytes = (totalFreeQuotaBytes - totalBytesUsed).clamp(0, totalFreeQuotaBytes);
+    final usedMb = (totalBytesUsed / (1024 * 1024));
+    final usedGb = (totalBytesUsed / (1024 * 1024 * 1024));
+    final remainingGb = (remainingBytes / (1024 * 1024 * 1024));
+    final usedPercentage = ((totalBytesUsed / totalFreeQuotaBytes) * 100).clamp(0.0, 100.0);
+    final estimatedSongsRemaining = (remainingBytes / (6.0 * 1024 * 1024)).floor();
+
+    return {
+      'totalLimitBytes': totalFreeQuotaBytes,
+      'totalLimitGb': 10.0,
+      'usedBytes': totalBytesUsed,
+      'usedMb': usedMb,
+      'usedGb': usedGb,
+      'remainingBytes': remainingBytes,
+      'remainingGb': remainingGb,
+      'usedPercentage': usedPercentage,
+      'totalObjects': totalObjectsCount,
+      'estimatedSongsRemaining': estimatedSongsRemaining,
+      'isLiveQueried': false,
+    };
+  }
+
+
   /// Query live bucket storage usage via S3 ListObjectsV2 API, with local accurate fallback
   Future<Map<String, dynamic>> getStorageUsageStats({int knownSongsCount = 0}) async {
     int totalBytesUsed = 0;
@@ -357,7 +394,7 @@ class R2StorageService extends ChangeNotifier {
     return _putObject(objectKey: objectKey, data: bytes, contentType: contentType);
   }
 
-  /// Read text / JSON string from Cloudflare R2 public CDN with cache-busting
+  /// Read text / JSON string from Cloudflare R2 public CDN with cache-busting and direct S3 SigV4 fallback
   Future<String?> getString(String objectKey) async {
     if (!isConfigured) return null;
     try {
@@ -369,12 +406,76 @@ class R2StorageService extends ChangeNotifier {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Pragma': 'no-cache',
         },
-      ).timeout(const Duration(seconds: 5));
-      if (res.statusCode == 200) {
+      ).timeout(const Duration(seconds: 12));
+      if (res.statusCode == 200 && res.bodyBytes.isNotEmpty) {
         return utf8.decode(res.bodyBytes);
       }
     } catch (e) {
-      debugPrint('R2 getString [$objectKey] exception: $e');
+      debugPrint('R2 public getString [$objectKey] notice: $e (trying authenticated S3 fallback)');
+    }
+
+    // Direct S3 Authenticated GET fallback (bypasses CDN cache and public URL restrictions)
+    return await _getObjectAuthenticated(objectKey);
+  }
+
+  /// Direct S3 Authenticated GET using AWS Signature Version 4
+  Future<String?> _getObjectAuthenticated(String objectKey) async {
+    if (!isConfigured) return null;
+    try {
+      final now = DateTime.now().toUtc();
+      final dateStamp = _formatDateStamp(now);
+      final amzDate = _formatAmzDate(now);
+
+      final endpointHost = '$_accountId.r2.cloudflarestorage.com';
+      final requestUri = Uri.parse('https://$endpointHost/$_bucketName/$objectKey');
+
+      const emptyPayloadHash = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
+
+      final canonicalHeaders = 'host:$endpointHost\n'
+          'x-amz-content-sha256:$emptyPayloadHash\n'
+          'x-amz-date:$amzDate\n';
+      const signedHeaders = 'host;x-amz-content-sha256;x-amz-date';
+
+      final canonicalRequest = 'GET\n'
+          '/${_bucketName!}/$objectKey\n'
+          '\n'
+          '$canonicalHeaders\n'
+          '$signedHeaders\n'
+          '$emptyPayloadHash';
+
+      final canonicalRequestHash = sha256.convert(utf8.encode(canonicalRequest)).toString();
+      const algorithm = 'AWS4-HMAC-SHA256';
+      const region = 'auto';
+      const service = 's3';
+      final credentialScope = '$dateStamp/$region/$service/aws4_request';
+
+      final stringToSign = '$algorithm\n'
+          '$amzDate\n'
+          '$credentialScope\n'
+          '$canonicalRequestHash';
+
+      final signingKey = _getSignatureKey(_secretAccessKey!, dateStamp, region, service);
+      final signature = Hmac(sha256, signingKey).convert(utf8.encode(stringToSign)).toString();
+
+      final authorization = '$algorithm Credential=$_accessKeyId/$credentialScope, '
+          'SignedHeaders=$signedHeaders, Signature=$signature';
+
+      final response = await http.get(
+        requestUri,
+        headers: {
+          'Host': endpointHost,
+          'x-amz-date': amzDate,
+          'x-amz-content-sha256': emptyPayloadHash,
+          'Authorization': authorization,
+        },
+      ).timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) {
+        debugPrint('âœ… Cloudflare R2 Authenticated GET Success [$objectKey]');
+        return utf8.decode(response.bodyBytes);
+      }
+    } catch (e) {
+      debugPrint('R2 _getObjectAuthenticated [$objectKey] error: $e');
     }
     return null;
   }
@@ -413,6 +514,7 @@ class R2StorageService extends ChangeNotifier {
     );
 
     if (success) {
+      recordSongUploaded(bytes.length);
       onProgress?.call(1.0);
       return 'https://$_publicDomain/$objectKey';
     } else {
@@ -454,6 +556,7 @@ class R2StorageService extends ChangeNotifier {
     );
 
     if (success) {
+      recordSongUploaded(bytes.length);
       onProgress?.call(1.0);
       return 'https://$_publicDomain/$objectKey';
     } else {
@@ -527,14 +630,14 @@ class R2StorageService extends ChangeNotifier {
       ).timeout(const Duration(seconds: 20));
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        debugPrint('✅ Cloudflare R2 PUT Success [$objectKey] (HTTP ${response.statusCode})');
+        debugPrint('âœ… Cloudflare R2 PUT Success [$objectKey] (HTTP ${response.statusCode})');
         return true;
       } else {
-        debugPrint('❌ Cloudflare R2 PUT failed (${response.statusCode}): ${response.body}');
+        debugPrint('âŒ Cloudflare R2 PUT failed (${response.statusCode}): ${response.body}');
         return false;
       }
     } catch (e) {
-      debugPrint('❌ Cloudflare R2 PUT exception [$objectKey]: $e');
+      debugPrint('âŒ Cloudflare R2 PUT exception [$objectKey]: $e');
       return false;
     }
   }
@@ -581,4 +684,5 @@ class R2StorageService extends ChangeNotifier {
     }
   }
 }
+
 

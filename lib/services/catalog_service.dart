@@ -146,7 +146,7 @@ class CatalogService {
       album: 'Shayar Soul Tracks',
       duration: 220,
       streamUrl: '$_r2BaseUrl/guzarish_sartaaj.mp3',
-      coverUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&q=80',
+      coverUrl: 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=800&q=85',
       genre: 'Sufi',
       license: 'Personal Music Library',
       licenseUrl: 'local',
@@ -198,7 +198,7 @@ class CatalogService {
       album: 'Dhurandhar Soundtrack',
       duration: 195,
       streamUrl: '$_r2BaseUrl/jaiye_sajana.mp3',
-      coverUrl: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&q=80',
+      coverUrl: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=800&q=85',
       genre: 'Bollywood',
       license: 'Personal Music Library',
       licenseUrl: 'local',
@@ -322,7 +322,7 @@ class CatalogService {
         id: 'pl_haryanvi',
         title: '🌾 Haryanvi & Desi Ragni',
         description: 'Top Haryanvi Hits, Folk & High-Energy Desi Beats',
-        coverUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&q=80',
+        coverUrl: 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=800&q=85',
         songs: haryanviSongs,
       ));
     }
@@ -332,7 +332,7 @@ class CatalogService {
         id: 'pl_sartaaj',
         title: '🪕 Sufi & Punjabi Classics (Satinder Sartaaj)',
         description: 'Guzarish, Udaarian, Sajjan Raazi, Tere Bina Na Guzara & Hit Jukebox',
-        coverUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&q=80',
+        coverUrl: 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=800&q=85',
         songs: sufiSongs,
       ));
     }

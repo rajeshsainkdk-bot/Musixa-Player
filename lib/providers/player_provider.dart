@@ -1,14 +1,17 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import '../models/song.dart';
 import '../models/playlist.dart';
+import '../models/artist.dart';
+import '../models/album.dart';
 import '../models/equalizer_preset.dart';
 import '../services/audio_player_service.dart';
 import '../services/catalog_service.dart';
 import '../services/storage_service.dart';
 import '../services/device_audio_service.dart';
 import '../services/cloud_backend_service.dart';
+import '../services/ai_music_service.dart';
 import '../services/song_artwork_resolver.dart';
 
 class PlayerProvider extends ChangeNotifier {
@@ -48,6 +51,10 @@ class PlayerProvider extends ChangeNotifier {
   EqualizerPreset _currentEqPreset = EqualizerPreset.defaultPresets.first;
   List<double> _bandGains = [0.0, 0.0, 0.0, 0.0, 0.0];
 
+  List<Artist> _cachedArtists = [];
+  List<Album> _cachedAlbums = [];
+  DateTime _lastPositionNotify = DateTime.fromMillisecondsSinceEpoch(0);
+
   // Getters
   Song? get currentSong => _audioService.currentSong;
   List<Song> get queue => _audioService.queue;
@@ -64,6 +71,8 @@ class PlayerProvider extends ChangeNotifier {
 
   List<Song> get trendingSongs => _trendingSongs;
   List<Playlist> get curatedPlaylists => _curatedPlaylists;
+  List<Artist> get artists => _cachedArtists;
+  List<Album> get albums => _cachedAlbums;
   List<Song> get searchResults => _searchResults;
   List<Song> get favorites => _favorites;
   List<Song> get recentlyPlayed => _recentlyPlayed;
@@ -132,12 +141,26 @@ class PlayerProvider extends ChangeNotifier {
       notifyListeners();
     });
 
-    // 2. Load cached persistence (scoped to current user's phone if signed in)
+    // 0. Seed memory catalog immediately for instant sub-second cold start!
+    if (_trendingSongs.isEmpty) {
+      _trendingSongs = List.from(CatalogService.getCuratedSongs());
+      _cachedArtists = AiMusicService().extractArtists(_trendingSongs);
+      _cachedAlbums = AiMusicService().extractAlbums(_trendingSongs);
+      notifyListeners();
+    }
+
+    // 2. Load cached persistence concurrently with Future.wait
     final currentUserPhone = CloudBackendService().currentUser?.phoneNumber;
-    _favorites = await _storageService.loadFavorites(currentUserPhone);
-    _recentlyPlayed = await _storageService.loadRecentlyPlayed(currentUserPhone);
-    _customPlaylists = await _storageService.loadCustomPlaylists(currentUserPhone);
-    final eqData = await _storageService.loadEqualizerSettings();
+    final results = await Future.wait([
+      _storageService.loadFavorites(currentUserPhone),
+      _storageService.loadRecentlyPlayed(currentUserPhone),
+      _storageService.loadCustomPlaylists(currentUserPhone),
+      _storageService.loadEqualizerSettings(),
+    ]);
+    _favorites = results[0] as List<Song>;
+    _recentlyPlayed = results[1] as List<Song>;
+    _customPlaylists = results[2] as List<Playlist>;
+    final eqData = results[3] as Map<String, dynamic>;
     final presetName = eqData['preset'] as String;
     _currentEqPreset = EqualizerPreset.defaultPresets.firstWhere(
       (p) => p.name == presetName,
@@ -145,15 +168,31 @@ class PlayerProvider extends ChangeNotifier {
     );
     _bandGains = List<double>.from(eqData['gains']);
 
-    // 3. Check device storage permission and scan if already granted
+    // 3. Scan device audio in background so initial UI rendering is 0ms instantaneous!
     _hasDevicePermission = await _deviceAudioService.hasPermission();
     if (_hasDevicePermission) {
-      _deviceSongs = await _deviceAudioService.scanDeviceSongs();
-      _syncFavoritesFlag(_deviceSongs);
+      Future.microtask(() async {
+        _deviceSongs = await _deviceAudioService.scanDeviceSongs();
+        _syncFavoritesFlag(_deviceSongs);
+        notifyListeners();
+      });
     }
 
     // 4. Load online catalog
     await refreshCatalog();
+  }
+
+  /// Called immediately when a user registers or logs in on any device
+  Future<void> onUserAuthenticated() async {
+    final backend = CloudBackendService();
+    await backend.syncWithCloud();
+    await refreshCatalog();
+    final currentUserPhone = backend.currentUser?.phoneNumber;
+    _favorites = await _storageService.loadFavorites(currentUserPhone);
+    _recentlyPlayed = await _storageService.loadRecentlyPlayed(currentUserPhone);
+    _customPlaylists = await _storageService.loadCustomPlaylists(currentUserPhone);
+    _syncFavoritesFlag(_trendingSongs);
+    notifyListeners();
   }
 
   /// Scan local songs from device storage folders
@@ -174,10 +213,20 @@ class PlayerProvider extends ChangeNotifier {
     notifyListeners();
 
     final backend = CloudBackendService();
+
+    // If backend has no songs yet on startup/new device, explicitly trigger cloud sync!
+    if (backend.approvedSongs.isEmpty) {
+      await backend.syncWithCloud(force: true, forceNotify: true);
+    }
+
     final deleted = backend.deletedSongIds;
 
     _trendingSongs = await _catalogService.fetchTrendingTracks();
     _curatedPlaylists = _catalogService.getCuratedPlaylists(songs: _trendingSongs);
+
+    // Cache artists and albums so getters don't loop/regex on 438 songs during playback!
+    _cachedArtists = AiMusicService().extractArtists(_trendingSongs);
+    _cachedAlbums = AiMusicService().extractAlbums(_trendingSongs);
 
     // If currently playing song was deleted by admin, immediately stop playback!
     if (_audioService.currentSong != null && deleted.contains(_audioService.currentSong!.id)) {
@@ -229,6 +278,9 @@ class PlayerProvider extends ChangeNotifier {
   }
 
   Future<void> seek(Duration pos) async {
+    _currentPosition = pos;
+    _lastPositionNotify = DateTime.now();
+    notifyListeners();
     await _audioService.seek(pos);
   }
 
@@ -315,7 +367,7 @@ class PlayerProvider extends ChangeNotifier {
     final cleanTitle = title.trim();
     if (cleanTitle.isEmpty) return;
 
-    // Check if playlist with identical title already exists
+    // Prevent duplicate playlist names: if already exists, append new songs to it
     final existingIdx = _customPlaylists.indexWhere(
       (p) => p.title.trim().toLowerCase() == cleanTitle.toLowerCase(),
     );
@@ -426,7 +478,9 @@ class PlayerProvider extends ChangeNotifier {
     final deviceResults = _deviceSongs.where((s) =>
         s.title.toLowerCase().contains(lower) ||
         s.artist.toLowerCase().contains(lower) ||
-        s.album.toLowerCase().contains(lower)).toList();
+        s.album.toLowerCase().contains(lower) ||
+        s.genre.toLowerCase().contains(lower) ||
+        (s.subCategory != null && s.subCategory!.toLowerCase().contains(lower))).toList();
 
     _searchResults = [...catalogResults, ...deviceResults];
     _syncFavoritesFlag(_searchResults);
@@ -500,3 +554,4 @@ class PlayerProvider extends ChangeNotifier {
     super.dispose();
   }
 }
+
