@@ -373,27 +373,8 @@ jobs:
                               }
                           }
                           "openVideoWithApp" -> {
-                              try {
-                                  val path = call.argument<String>("path") ?: ""
-                                  val idStr = call.argument<String>("id")
-                                  val intent = Intent(Intent.ACTION_VIEW).apply {
-                                      if (!idStr.isNullOrEmpty() && idStr.toLongOrNull() != null) {
-                                          val uri = ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, idStr.toLong())
-                                          setDataAndType(uri, "video/*")
-                                      } else {
-                                          setDataAndType(Uri.parse(path), "video/*")
-                                      }
-                                      addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                      addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                  }
-                                  val chooser = Intent.createChooser(intent, "Play Video With").apply {
-                                      addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                  }
-                                  ctx.startActivity(chooser)
-                                  result.success(true)
-                              } catch (e: Exception) {
-                                  result.error("OPEN_VIDEO_ERR", e.localizedMessage, null)
-                              }
+                              // Strictly pure in-app playback: external applications disabled
+                              result.success(true)
                           }
                           "acquireWakeLock" -> result.success(true)
                           "releaseWakeLock" -> result.success(true)
