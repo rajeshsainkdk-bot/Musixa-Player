@@ -896,20 +896,20 @@ jobs:
               print(f"Uploading {apk_path} ({size_mb} MB) to R2 update/musixa_player_latest.apk...")
               s3.upload_file(
                   apk_path,
-                  'msixa-music',
+                  'musixa-music',
                   'update/musixa_player_latest.apk',
                   ExtraArgs={'ContentType': 'application/vnd.android.package-archive'}
               )
               manifest = {
                   'version_code': run_num,
                   'version_name': f"1.0.{run_num}",
-                  'apk_url': 'https://pub-d4f2e58dc2594d0c8dc1f30bbae4344f.r2.dev/update/musixa_player_latest.apk',
+                  'apk_url': 'https://25622df2e6919b63cf30e7d06532d778.r2.cloudflarestorage.com/musixa-music/update/musixa_player_latest.apk',
                   'file_size_mb': size_mb,
                   'release_notes': "Musixa Player Pro: Authentic MX Player Video UI, real video thumbnails, subtitle badges, and gesture HUD controls!",
                   'force_update': False
               }
               s3.put_object(
-                  Bucket='msixa-music',
+                  Bucket='musixa-music',
                   Key='update/musixa_player_version.json',
                   Body=json.dumps(manifest),
                   ContentType='application/json'
@@ -917,7 +917,7 @@ jobs:
               if os.path.exists('privacy_policy.html'):
                   s3.upload_file(
                       'privacy_policy.html',
-                      'msixa-music',
+                      'musixa-music',
                       'privacy_policy.html',
                       ExtraArgs={'ContentType': 'text/html; charset=utf-8'}
                   )

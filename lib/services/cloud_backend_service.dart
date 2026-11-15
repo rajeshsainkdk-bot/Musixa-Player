@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -123,12 +123,13 @@ class CloudBackendService extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
 
     // Ensure 100% Musixa isolation: purge any legacy cross-synced Msixa songs/users from local cache
-    const keyMusixaPurge = 'musixa_isolated_clean_v4';
+    const keyMusixaPurge = 'musixa_isolated_clean_v5';
     if (!(prefs.getBool(keyMusixaPurge) ?? false)) {
       await prefs.remove(_keyAllUsers);
       await prefs.remove(_keyCommunitySongs);
       await prefs.remove(_keyDeletedSongIds);
       await prefs.remove(_keyCloudPlaylists);
+      await prefs.remove(_keyCatalogSeeded);
       await prefs.setBool(keyMusixaPurge, true);
     }
 

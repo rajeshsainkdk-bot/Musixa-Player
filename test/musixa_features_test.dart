@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:musixa_player/models/song.dart';
 import 'package:musixa_player/models/folder_hierarchy.dart';
