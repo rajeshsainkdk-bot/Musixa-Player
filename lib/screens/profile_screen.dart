@@ -1,9 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../services/ad_service.dart';
 import '../services/cloud_backend_service.dart';
 import '../services/language_service.dart';
 import '../services/update_service.dart';
@@ -264,11 +262,11 @@ class ProfileScreen extends StatelessWidget {
                   ListTile(
                     leading: const Icon(Icons.folder_open_rounded, color: Color(0xFF00E5FF), size: 22),
                     title: Text(
-                      lang.isHindi ? 'फ़ोन स्टोरेज स्कैन करें (Offline Audio)' : 'Scan Device Audio Storage',
+                      lang.isHindi ? 'à¤«à¤¼à¥‹à¤¨ à¤¸à¥à¤Ÿà¥‹à¤°à¥‡à¤œ à¤¸à¥à¤•à¥ˆà¤¨ à¤•à¤°à¥‡à¤‚ (Offline Audio)' : 'Scan Device Audio Storage',
                       style: const TextStyle(color: Colors.white, fontSize: 14),
                     ),
                     subtitle: Text(
-                      lang.isHindi ? 'फ़ोन के गानों को लाइब्रेरी में जोड़ें' : 'Scan local MP3s into library',
+                      lang.isHindi ? 'à¤«à¤¼à¥‹à¤¨ à¤•à¥‡ à¤—à¤¾à¤¨à¥‹à¤‚ à¤•à¥‹ à¤²à¤¾à¤‡à¤¬à¥à¤°à¥‡à¤°à¥€ à¤®à¥‡à¤‚ à¤œà¥‹à¤¡à¤¼à¥‡à¤‚' : 'Scan local MP3s into library',
                       style: const TextStyle(color: Colors.grey, fontSize: 11),
                     ),
                     trailing: IconButton(
@@ -278,7 +276,7 @@ class ProfileScreen extends StatelessWidget {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              lang.isHindi ? 'फ़ोन स्टोरेज स्कैन हो रहा है...' : 'Scanning device storage...',
+                              lang.isHindi ? 'à¤«à¤¼à¥‹à¤¨ à¤¸à¥à¤Ÿà¥‹à¤°à¥‡à¤œ à¤¸à¥à¤•à¥ˆà¤¨ à¤¹à¥‹ à¤°à¤¹à¤¾ à¤¹à¥ˆ...' : 'Scanning device storage...',
                             ),
                           ),
                         );
@@ -298,122 +296,7 @@ class ProfileScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-
-            // Musixa Pro & Monetization Card
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF1E1B4B), Color(0xFF0F172A)],
-                ),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF818CF8).withOpacity(0.3)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: const [
-                      Icon(Icons.workspace_premium_rounded, color: Color(0xFFFFD700), size: 20),
-                      SizedBox(width: 8),
-                      Text(
-                        'Musixa Pro & Ad-Free',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    AdService().isAdFree
-                        ? '✅ Pro Version Active - Enjoy completely ad-free music!'
-                        : 'Support Musixa & enjoy uninterrupted high-res music playback without ads.',
-                    style: const TextStyle(color: Colors.white70, fontSize: 11),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      if (!AdService().isAdFree)
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFFFB300),
-                              foregroundColor: Colors.black,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            ),
-                            icon: const Icon(Icons.star_rounded, size: 16),
-                            label: const Text('Go Pro (₹49)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                            onPressed: () async {
-                              await AdService().setAdFree(true);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('🎉 Welcome to Musixa Pro! Ads removed.')),
-                              );
-                            },
-                          ),
-                        ),
-                      if (!AdService().isAdFree) const SizedBox(width: 8),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF00E5FF),
-                            side: const BorderSide(color: Color(0xFF00E5FF)),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          icon: const Icon(Icons.ondemand_video_rounded, size: 16),
-                          label: const Text('24h Free Unlock', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                          onPressed: () {
-                            AdService().showRewardedAdForProUnlock(
-                              onUnlocked: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('🎁 24 Hours Pro Sound FX Unlocked!')),
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Legal & Compliance Links
-            Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFF131A2A),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withOpacity(0.06)),
-              ),
-              child: Column(
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.privacy_tip_outlined, color: Color(0xFF00E5FF), size: 20),
-                    title: const Text('Privacy Policy', style: TextStyle(color: Colors.white, fontSize: 13)),
-                    subtitle: const Text('Read how we protect your offline data', style: TextStyle(color: Colors.white54, fontSize: 10)),
-                    trailing: const Icon(Icons.open_in_new_rounded, color: Colors.grey, size: 16),
-                    onTap: () async {
-                      final uri = Uri.parse('https://pub-d4f2e58dc2594d0c8dc1f30bbae4344f.r2.dev/privacy_policy.html');
-                      try {
-                        if (await canLaunchUrl(uri)) {
-                          await launchUrl(uri, mode: LaunchMode.externalApplication);
-                        }
-                      } catch (_) {}
-                    },
-                  ),
-                  const Divider(height: 1, color: Colors.white10),
-                  ListTile(
-                    leading: const Icon(Icons.star_rate_rounded, color: Color(0xFFFFB300), size: 20),
-                    title: const Text('Rate Us on Google Play', style: TextStyle(color: Colors.white, fontSize: 13)),
-                    subtitle: const Text('Help us grow by giving 5 stars ⭐', style: TextStyle(color: Colors.white54, fontSize: 10)),
-                    trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.grey, size: 14),
-                    onTap: () => UpdateService.openPlayStoreListing(),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 28),
 
             // Check for Updates Button
             OutlinedButton.icon(
@@ -425,18 +308,54 @@ class ProfileScreen extends StatelessWidget {
               ),
               icon: const Icon(Icons.system_update_rounded, size: 18),
               label: Text(
-                'अपडेट जांचें (Check for Updates)',
+                lang.isHindi ? 'à¤…à¤ªà¤¡à¥‡à¤Ÿ à¤œà¤¾à¤‚à¤šà¥‡à¤‚ (Check for Updates)' : 'Check for Updates',
                 style: GoogleFonts.syne(fontSize: 14, fontWeight: FontWeight.bold),
               ),
               onPressed: () => UpdateService.checkForUpdate(context, autoPrompt: false),
             ),
             const SizedBox(height: 12),
 
+            // Live Installed Version Badge
+            FutureBuilder<Map<String, dynamic>>(
+              future: UpdateService.getInstalledVersion(),
+              builder: (context, snapshot) {
+                final vName = snapshot.data?['versionName'] ?? '1.0.60';
+                final vCode = snapshot.data?['versionCode'] ?? 60;
+                return Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF131B2C),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFF00E5FF).withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.verified_rounded, color: Color(0xFF00E5FF), size: 16),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${lang.isHindi ? "à¤µà¤°à¥à¤¤à¤®à¤¾à¤¨ à¤µà¤°à¥à¤œà¤¼à¤¨" : "Running Version"}: v$vName (Build $vCode)',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+
             // 4. Sign Out Button
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.orangeAccent,
-                side: BorderSide(color: Colors.orangeAccent.withOpacity(0.5)),
+                foregroundColor: Colors.redAccent,
+                side: BorderSide(color: Colors.redAccent.withOpacity(0.5)),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
@@ -447,27 +366,12 @@ class ProfileScreen extends StatelessWidget {
               ),
               onPressed: () => _confirmSignOut(context, backend, lang),
             ),
-            const SizedBox(height: 12),
-
-            // 5. Delete Account Button (Google Play Data Safety & User Privacy Policy)
-            TextButton.icon(
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.redAccent.withOpacity(0.8),
-                padding: const EdgeInsets.symmetric(vertical: 10),
-              ),
-              icon: const Icon(Icons.delete_forever_rounded, size: 16),
-              label: Text(
-                lang.isHindi ? 'खाता स्थायी रूप से हटाएं (Delete Account)' : 'Delete Account & Data',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-              ),
-              onPressed: () => _confirmDeleteAccount(context, backend, lang),
-            ),
             const SizedBox(height: 16),
 
             // App Version Footer
             Center(
               child: Text(
-                'Musixa Player • v1.0.0 (Google Play Edition)',
+                'Musixa Player â€¢ Dedicated Private Cloud Edition',
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
               ),
             ),
@@ -549,62 +453,7 @@ class ProfileScreen extends StatelessWidget {
               await backend.signOut();
             },
             child: Text(
-              lang.isHindi ? 'हाँ, लॉग आउट करें' : 'Yes, Sign Out',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _confirmDeleteAccount(BuildContext context, CloudBackendService backend, LanguageService lang) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF131A2A),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: const [
-            Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 22),
-            SizedBox(width: 8),
-            Text(
-              'Delete Account',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-          ],
-        ),
-        content: Text(
-          lang.isHindi
-              ? 'क्या आप अपना खाता और सभी संबंधित डेटा स्थायी रूप से हटाना चाहते हैं? यह क्रिया वापस नहीं ली जा सकती।'
-              : 'Are you sure you want to permanently delete your account and personal data? This action is permanent and cannot be undone.',
-          style: const TextStyle(color: Colors.white70, fontSize: 13),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(lang.t('cancel'), style: const TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFDC2626),
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () async {
-              Navigator.pop(ctx);
-              Navigator.pop(context);
-              await backend.deleteAccount();
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Your account and data have been permanently deleted.'),
-                    backgroundColor: Color(0xFFDC2626),
-                  ),
-                );
-              }
-            },
-            child: Text(
-              lang.isHindi ? 'हाँ, खाता हटाएं' : 'Permanently Delete',
+              lang.isHindi ? 'à¤¹à¤¾à¤, à¤²à¥‰à¤— à¤†à¤‰à¤Ÿ à¤•à¤°à¥‡à¤‚' : 'Yes, Sign Out',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
@@ -613,4 +462,5 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 }
+
 
