@@ -262,11 +262,11 @@ class ProfileScreen extends StatelessWidget {
                   ListTile(
                     leading: const Icon(Icons.folder_open_rounded, color: Color(0xFF00E5FF), size: 22),
                     title: Text(
-                      lang.isHindi ? 'à¤«à¤¼à¥‹à¤¨ à¤¸à¥à¤Ÿà¥‹à¤°à¥‡à¤œ à¤¸à¥à¤•à¥ˆà¤¨ à¤•à¤°à¥‡à¤‚ (Offline Audio)' : 'Scan Device Audio Storage',
+                      lang.isHindi ? 'फ़ोन स्टोरेज स्कैन करें (Offline Audio)' : 'Scan Device Audio Storage',
                       style: const TextStyle(color: Colors.white, fontSize: 14),
                     ),
                     subtitle: Text(
-                      lang.isHindi ? 'à¤«à¤¼à¥‹à¤¨ à¤•à¥‡ à¤—à¤¾à¤¨à¥‹à¤‚ à¤•à¥‹ à¤²à¤¾à¤‡à¤¬à¥à¤°à¥‡à¤°à¥€ à¤®à¥‡à¤‚ à¤œà¥‹à¤¡à¤¼à¥‡à¤‚' : 'Scan local MP3s into library',
+                      lang.isHindi ? 'फ़ोन के गानों को लाइब्रेरी में जोड़ें' : 'Scan local MP3s into library',
                       style: const TextStyle(color: Colors.grey, fontSize: 11),
                     ),
                     trailing: IconButton(
@@ -276,7 +276,7 @@ class ProfileScreen extends StatelessWidget {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              lang.isHindi ? 'à¤«à¤¼à¥‹à¤¨ à¤¸à¥à¤Ÿà¥‹à¤°à¥‡à¤œ à¤¸à¥à¤•à¥ˆà¤¨ à¤¹à¥‹ à¤°à¤¹à¤¾ à¤¹à¥ˆ...' : 'Scanning device storage...',
+                              lang.isHindi ? 'फ़ोन स्टोरेज स्कैन हो रहा है...' : 'Scanning device storage...',
                             ),
                           ),
                         );
@@ -308,7 +308,7 @@ class ProfileScreen extends StatelessWidget {
               ),
               icon: const Icon(Icons.system_update_rounded, size: 18),
               label: Text(
-                lang.isHindi ? 'à¤…à¤ªà¤¡à¥‡à¤Ÿ à¤œà¤¾à¤‚à¤šà¥‡à¤‚ (Check for Updates)' : 'Check for Updates',
+                lang.isHindi ? 'अपडेट जांचें (Check for Updates)' : 'Check for Updates',
                 style: GoogleFonts.syne(fontSize: 14, fontWeight: FontWeight.bold),
               ),
               onPressed: () => UpdateService.checkForUpdate(context, autoPrompt: false),
@@ -335,7 +335,7 @@ class ProfileScreen extends StatelessWidget {
                         const Icon(Icons.verified_rounded, color: Color(0xFF00E5FF), size: 16),
                         const SizedBox(width: 8),
                         Text(
-                          '${lang.isHindi ? "à¤µà¤°à¥à¤¤à¤®à¤¾à¤¨ à¤µà¤°à¥à¤œà¤¼à¤¨" : "Running Version"}: v$vName (Build $vCode)',
+                          '${lang.isHindi ? "वर्तमान वर्ज़न" : "Running Version"}: v$vName (Build $vCode)',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
@@ -371,7 +371,7 @@ class ProfileScreen extends StatelessWidget {
             // App Version Footer
             Center(
               child: Text(
-                'Musixa Player â€¢ Dedicated Private Cloud Edition',
+                'Musixa Player • Dedicated Private Cloud Edition',
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
               ),
             ),
@@ -453,7 +453,7 @@ class ProfileScreen extends StatelessWidget {
               await backend.signOut();
             },
             child: Text(
-              lang.isHindi ? 'à¤¹à¤¾à¤, à¤²à¥‰à¤— à¤†à¤‰à¤Ÿ à¤•à¤°à¥‡à¤‚' : 'Yes, Sign Out',
+              lang.isHindi ? 'हाँ, लॉग आउट करें' : 'Yes, Sign Out',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),

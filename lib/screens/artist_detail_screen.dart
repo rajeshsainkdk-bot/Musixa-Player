@@ -122,7 +122,7 @@ class ArtistDetailScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '${artist.songCount} ${lang.isHindi ? "à¤—à¤¾à¤¨à¥‡" : "Tracks"}',
+                        '${artist.songCount} ${lang.isHindi ? "गाने" : "Tracks"}',
                         style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 12,
@@ -144,7 +144,7 @@ class ArtistDetailScreen extends StatelessWidget {
                           ),
                           icon: const Icon(Icons.play_arrow_rounded, size: 22),
                           label: Text(
-                            lang.isHindi ? 'à¤¸à¤­à¥€ à¤šà¤²à¤¾à¤à¤‚' : 'Play All',
+                            lang.isHindi ? 'सभी चलाएं' : 'Play All',
                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                           ),
                           onPressed: () {
@@ -177,7 +177,7 @@ class ArtistDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    lang.isHindi ? 'à¤•à¤²à¤¾à¤•à¤¾à¤° à¤•à¥‡ à¤—à¤¾à¤¨à¥‡' : 'Songs by ${artist.name}',
+                    lang.isHindi ? 'कलाकार के गाने' : 'Songs by ${artist.name}',
                     style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 16,

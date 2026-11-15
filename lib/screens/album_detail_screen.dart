@@ -142,7 +142,7 @@ class AlbumDetailScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'â€¢ ${album.songCount} ${lang.isHindi ? "à¤—à¤¾à¤¨à¥‡" : "Tracks"} â€¢ ${album.formattedTotalDuration}',
+                        '• ${album.songCount} ${lang.isHindi ? "गाने" : "Tracks"} • ${album.formattedTotalDuration}',
                         style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 12,
@@ -163,7 +163,7 @@ class AlbumDetailScreen extends StatelessWidget {
                           ),
                           icon: const Icon(Icons.play_arrow_rounded, size: 22),
                           label: Text(
-                            lang.isHindi ? 'à¤à¤²à¥à¤¬à¤® à¤šà¤²à¤¾à¤à¤‚' : 'Play Album',
+                            lang.isHindi ? 'एल्बम चलाएं' : 'Play Album',
                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                           ),
                           onPressed: () {
@@ -196,7 +196,7 @@ class AlbumDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    lang.isHindi ? 'à¤Ÿà¥à¤°à¥ˆà¤• à¤¸à¥‚à¤šà¥€ (Tracks)' : 'Tracklist',
+                    lang.isHindi ? 'ट्रैक सूची (Tracks)' : 'Tracklist',
                     style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 16,

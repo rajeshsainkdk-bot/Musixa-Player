@@ -187,7 +187,7 @@ class AiMusicService {
     // 7. Title Fallback Recovery: If title is still 'Track 1' or 'bulk_...'
     if (RegExp(r'^(track\s*\d+|bulk_\d+)', caseSensitive: false).hasMatch(rawTitle)) {
       if (song.subCategory != null && song.subCategory!.isNotEmpty) {
-        rawTitle = '${song.subCategory} â€¢ Track ${song.id.replaceAll(RegExp(r'[^0-9]'), '')}';
+        rawTitle = '${song.subCategory} • Track ${song.id.replaceAll(RegExp(r'[^0-9]'), '')}';
       } else {
         // Derive from stream URL basename if available
         final uri = Uri.tryParse(song.streamUrl);
@@ -280,7 +280,7 @@ class AiMusicService {
     final Map<String, List<Song>> map = {};
     for (final song in songs) {
       final cleaned = cleanAndOptimizeSong(song);
-      final albumKey = '${cleaned.artist} â€¢ ${cleaned.album}'.trim();
+      final albumKey = '${cleaned.artist} • ${cleaned.album}'.trim();
       map.putIfAbsent(albumKey, () => []).add(cleaned);
     }
 

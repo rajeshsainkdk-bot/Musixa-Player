@@ -28,7 +28,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      UpdateService.checkForUpdate(context, autoPrompt: true);
       IntentService.checkInitialMedia(context);
     });
   }

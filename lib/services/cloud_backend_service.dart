@@ -178,7 +178,20 @@ class CloudBackendService extends ChangeNotifier {
       _allUsers.add(defaultAdmin);
     }
 
-    // 2.5 Load Deleted Song IDs (Tombstones so deleted songs NEVER resurrect)
+    // 2.5 Migration: Purge stale deleted tombstones
+    const keyFixStaleDeleted = 'musixa_purge_stale_deleted_v10';
+    if (!prefs.containsKey(keyFixStaleDeleted)) {
+      await prefs.remove(_keyDeletedSongIds);
+      _deletedSongIds.clear();
+      for (final p in _sharedDeletedSongFilePaths) {
+        try {
+          final f = File(p);
+          if (f.existsSync()) f.deleteSync();
+        } catch (_) {}
+      }
+      await prefs.setBool(keyFixStaleDeleted, true);
+    }
+
     final deletedRaw = prefs.getStringList(_keyDeletedSongIds) ?? [];
     _deletedSongIds.clear();
     _deletedSongIds.addAll(deletedRaw);
@@ -443,7 +456,7 @@ class CloudBackendService extends ChangeNotifier {
     _generatedPhoneOtp = code;
 
     debugPrint('====================================');
-    debugPrint('ðŸ“² SMS OTP generated for $_pendingPhone: $code');
+    debugPrint('📲 SMS OTP generated for $_pendingPhone: $code');
     debugPrint('====================================');
 
     await Future.delayed(const Duration(milliseconds: 300));
@@ -798,7 +811,7 @@ class CloudBackendService extends ChangeNotifier {
     return false;
   }
 
-  /// Approve a pending song â€” instantly publishes to all users!
+  /// Approve a pending song — instantly publishes to all users!
   Future<void> approveSong(String songId) async {
     final index = _communitySongs.indexWhere((s) => s.id == songId);
     if (index != -1) {
@@ -895,7 +908,7 @@ class CloudBackendService extends ChangeNotifier {
       final r2 = R2StorageService();
       if (r2.isConfigured && (isAdmin || _currentUser?.role == 'admin')) {
         await r2.putString('db/deleted_songs.json', jsonContent);
-        debugPrint('âœ… Persisted ${_deletedSongIds.length} deleted song IDs to Cloudflare R2');
+        debugPrint('✅ Persisted ${_deletedSongIds.length} deleted song IDs to Cloudflare R2');
       }
     } catch (e) {
       debugPrint('Error persisting deleted songs: $e');
@@ -929,10 +942,10 @@ class CloudBackendService extends ChangeNotifier {
       final r2 = R2StorageService();
       if (r2.isConfigured) {
         final success = await r2.putString('db/users.json', jsonContent);
-        debugPrint('âœ… Persisted ${_allUsers.length} users to Cloudflare R2: success=$success');
+        debugPrint('✅ Persisted ${_allUsers.length} users to Cloudflare R2: success=$success');
       }
     } catch (e) {
-      debugPrint('âŒ Cloud R2 persist users error: $e');
+      debugPrint('❌ Cloud R2 persist users error: $e');
     }
   }
 
@@ -960,10 +973,10 @@ class CloudBackendService extends ChangeNotifier {
       final r2 = R2StorageService();
       if (r2.isConfigured && (isAdmin || _currentUser?.role == 'admin')) {
         final success = await r2.putString('db/songs.json', jsonContent);
-        debugPrint('âœ… Persisted ${_communitySongs.length} songs to Cloudflare R2: success=$success');
+        debugPrint('✅ Persisted ${_communitySongs.length} songs to Cloudflare R2: success=$success');
       }
     } catch (e) {
-      debugPrint('âŒ Cloud R2 persist songs error: $e');
+      debugPrint('❌ Cloud R2 persist songs error: $e');
     }
   }
 
@@ -1120,10 +1133,11 @@ class CloudBackendService extends ChangeNotifier {
         final cloudDeletedJson = await r2.getString('db/deleted_songs.json');
         if (cloudDeletedJson != null && cloudDeletedJson.trim().isNotEmpty) {
           final List<dynamic> ids = jsonDecode(cloudDeletedJson);
-          for (final id in ids) {
-            if (id is String && id.trim().isNotEmpty) {
-              if (_deletedSongIds.add(id)) hasChanges = true;
-            }
+          final cloudSet = ids.whereType<String>().map((e) => e.trim()).where((e) => e.isNotEmpty).toSet();
+          if (_deletedSongIds.length != cloudSet.length || !_deletedSongIds.containsAll(cloudSet)) {
+            _deletedSongIds.clear();
+            _deletedSongIds.addAll(cloudSet);
+            hasChanges = true;
           }
         }
       }
@@ -1183,6 +1197,14 @@ class CloudBackendService extends ChangeNotifier {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setStringList(_keyCommunitySongs, _communitySongs.map((s) => jsonEncode(s.toJson())).toList());
         await prefs.setStringList(_keyDeletedSongIds, _deletedSongIds.toList());
+        final delJson = jsonEncode(_deletedSongIds.toList());
+        for (final p in _sharedDeletedSongFilePaths) {
+          try {
+            final f = File(p);
+            if (!await f.parent.exists()) await f.parent.create(recursive: true);
+            await f.writeAsString(delJson, flush: true);
+          } catch (_) {}
+        }
       } catch (_) {}
     }
 

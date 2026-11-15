@@ -76,7 +76,7 @@ class _AdminRootViewState extends State<AdminRootView> {
   Future<void> _loginAdmin() async {
     final pin = _pinCtrl.text.trim();
     if (pin.isEmpty) {
-      setState(() => _error = _lang.isHindi ? 'à¤•à¥ƒà¤ªà¤¯à¤¾ à¤à¤¡à¤®à¤¿à¤¨ à¤®à¤¾à¤¸à¥à¤Ÿà¤° à¤ªà¤¿à¤¨ à¤¦à¤°à¥à¤œ à¤•à¤°à¥‡à¤‚' : 'Please enter Admin Master PIN');
+      setState(() => _error = _lang.isHindi ? 'कृपया एडमिन मास्टर पिन दर्ज करें' : 'Please enter Admin Master PIN');
       return;
     }
 
@@ -90,7 +90,7 @@ class _AdminRootViewState extends State<AdminRootView> {
     setState(() {
       _isLoading = false;
       if (!ok) {
-        _error = _lang.isHindi ? 'à¤—à¤²à¤¤ à¤à¤¡à¤®à¤¿à¤¨ à¤ªà¤¿à¤¨ (Incorrect Admin PIN)' : 'Incorrect Admin PIN';
+        _error = _lang.isHindi ? 'गलत एडमिन पिन (Incorrect Admin PIN)' : 'Incorrect Admin PIN';
       }
     });
   }
@@ -210,7 +210,7 @@ class _AdminRootViewState extends State<AdminRootView> {
                           textAlign: TextAlign.center,
                           style: const TextStyle(color: Colors.white, fontSize: 18, letterSpacing: 6),
                           decoration: InputDecoration(
-                            hintText: 'â€¢â€¢â€¢â€¢',
+                            hintText: '••••',
                             hintStyle: const TextStyle(color: Colors.grey, letterSpacing: 4),
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -229,7 +229,7 @@ class _AdminRootViewState extends State<AdminRootView> {
                       ),
                       child: _isLoading
                           ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
-                          : Text(_lang.isHindi ? 'à¤à¤¡à¤®à¤¿à¤¨ à¤•à¤‚à¤¸à¥‹à¤² à¤®à¥‡à¤‚ à¤ªà¥à¤°à¤µà¥‡à¤¶ à¤•à¤°à¥‡à¤‚ (Login)' : 'Enter Admin Console (Login)', style: GoogleFonts.syne(fontSize: 14, fontWeight: FontWeight.bold)),
+                          : Text(_lang.isHindi ? 'एडमिन कंसोल में प्रवेश करें (Login)' : 'Enter Admin Console (Login)', style: GoogleFonts.syne(fontSize: 14, fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ),
@@ -237,7 +237,7 @@ class _AdminRootViewState extends State<AdminRootView> {
 
               const SizedBox(height: 18),
               Text(
-                _lang.isHindi ? 'à¤¡à¤¿à¤«à¤¼à¥‰à¤²à¥à¤Ÿ à¤®à¤¾à¤¸à¥à¤Ÿà¤° à¤ªà¤¿à¤¨: 7777' : 'Default Master PIN: 7777',
+                _lang.isHindi ? 'डिफ़ॉल्ट मास्टर पिन: 7777' : 'Default Master PIN: 7777',
                 style: const TextStyle(color: Colors.white30, fontSize: 11),
               ),
             ],

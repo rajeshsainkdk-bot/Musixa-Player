@@ -290,11 +290,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      lang.isHindi ? 'ðŸš€ à¤¨à¤¯à¤¾ à¤µà¤°à¥à¤œà¤¼à¤¨ à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤¹à¥ˆ: v$vName' : 'ðŸš€ New Update Available: v$vName',
+                                      lang.isHindi ? '🚀 नया वर्ज़न उपलब्ध है: v$vName' : '🚀 New Update Available: v$vName',
                                       style: const TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.bold),
                                     ),
                                     Text(
-                                      lang.isHindi ? '1-à¤•à¥à¤²à¤¿à¤• à¤®à¥‡à¤‚ à¤¤à¥à¤°à¤‚à¤¤ à¤…à¤ªà¤¡à¥‡à¤Ÿ à¤•à¤°à¥‡à¤‚' : 'Tap to install OTA update directly',
+                                      lang.isHindi ? '1-क्लिक में तुरंत अपडेट करें' : 'Tap to install OTA update directly',
                                       style: const TextStyle(color: Colors.black87, fontSize: 10),
                                     ),
                                   ],
@@ -307,7 +307,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  lang.isHindi ? 'à¤…à¤ªà¤¡à¥‡à¤Ÿ' : 'Update',
+                                  lang.isHindi ? 'अपडेट' : 'Update',
                                   style: const TextStyle(color: Color(0xFFFFB300), fontSize: 11, fontWeight: FontWeight.bold),
                                 ),
                               ),
@@ -411,7 +411,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
-                                        '${heroSong.artist} â€¢ ${heroSong.genre}',
+                                        '${heroSong.artist} • ${heroSong.genre}',
                                         style: const TextStyle(
                                           color: AppColors.textSecondary,
                                           fontSize: 13,
@@ -609,13 +609,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
 
                 // ==========================================
-                // ðŸŽ¤ POPULAR ARTISTS & ðŸ’¿ TOP ALBUMS CAROUSELS
+                // 🎤 POPULAR ARTISTS & 💿 TOP ALBUMS CAROUSELS
                 // ==========================================
                 _buildArtistsCarousel(context, provider, lang),
                 _buildAlbumsCarousel(context, provider, lang),
 
                 // ==========================================
-                // ðŸ”¥ NEWLY ADDED BY COMMUNITY (Approved User Songs)
+                // 🔥 NEWLY ADDED BY COMMUNITY (Approved User Songs)
                 // ==========================================
                 _buildCommunitySection(context, provider),
 
@@ -624,7 +624,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 // ==========================================
                 _buildCategorySection(
                   context,
-                  title: 'ðŸ•‰ï¸ Divine Bhakti & Hanuman Chants',
+                  title: '🕉️ Divine Bhakti & Hanuman Chants',
                   genreKey: 'Bhakti',
                   provider: provider,
                   songs: trending.where((s) => s.genre == 'Bhakti').toList(),
@@ -635,7 +635,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 // ==========================================
                 _buildCategorySection(
                   context,
-                  title: 'ðŸª• Sufi & Punjabi (Satinder Sartaaj)',
+                  title: '🪕 Sufi & Punjabi (Satinder Sartaaj)',
                   genreKey: 'Punjabi',
                   provider: provider,
                   songs: trending.where((s) => s.genre == 'Punjabi' || s.genre == 'Sufi').toList(),
@@ -646,7 +646,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 // ==========================================
                 _buildCategorySection(
                   context,
-                  title: 'ðŸŽ¬ Bollywood & Indie Melodies',
+                  title: '🎬 Bollywood & Indie Melodies',
                   genreKey: 'Bollywood',
                   provider: provider,
                   songs: trending.where((s) => s.genre == 'Bollywood' || s.genre == 'Indie Pop').toList(),
@@ -657,7 +657,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 // ==========================================
                 _buildCategorySection(
                   context,
-                  title: 'ðŸ”± Aghori & Spiritual Trance',
+                  title: '🔱 Aghori & Spiritual Trance',
                   genreKey: 'Spiritual',
                   provider: provider,
                   songs: trending.where((s) => s.genre == 'Spiritual').toList(),
@@ -668,7 +668,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 // ==========================================
                 _buildCategorySection(
                   context,
-                  title: 'â˜• Desi Lo-Fi & Ghazals',
+                  title: '☕ Desi Lo-Fi & Ghazals',
                   genreKey: 'Desi Lo-Fi',
                   provider: provider,
                   songs: trending.where((s) => s.genre == 'Desi Lo-Fi' || s.genre == 'Ghazal').toList(),
@@ -679,7 +679,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 // ==========================================
                 _buildCategorySection(
                   context,
-                  title: 'ðŸª Rangeelo Rajasthani & Marwadi Hits',
+                  title: '🐪 Rangeelo Rajasthani & Marwadi Hits',
                   genreKey: 'Rajasthani',
                   provider: provider,
                   songs: trending.where((s) => s.genre == 'Rajasthani').toList(),
@@ -690,7 +690,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 // ==========================================
                 _buildCategorySection(
                   context,
-                  title: 'ðŸŒ¾ Haryanvi & Desi Beats',
+                  title: '🌾 Haryanvi & Desi Beats',
                   genreKey: 'Haryanvi',
                   provider: provider,
                   songs: trending.where((s) => s.genre == 'Haryanvi').toList(),
@@ -701,7 +701,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 // ==========================================
                 _buildCategorySection(
                   context,
-                  title: 'ðŸŽ§ DJ Remix & Bass Boosted',
+                  title: '🎧 DJ Remix & Bass Boosted',
                   genreKey: 'DJ Remix',
                   provider: provider,
                   songs: trending.where((s) => s.genre == 'DJ Remix').toList(),
@@ -726,7 +726,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     final genreSongs = trending.where((s) => s.genre.trim().toLowerCase() == genre.toLowerCase()).toList();
                     return _buildCategorySection(
                       context,
-                      title: 'ðŸ“ $genre Songs',
+                      title: '📁 $genre Songs',
                       genreKey: genre,
                       provider: provider,
                       songs: genreSongs,
@@ -912,8 +912,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Text(
                         isExpanded
-                            ? (lang.isHindi ? 'à¤•à¤® à¤•à¤°à¥‡à¤‚ â–²' : 'Collapse â–²')
-                            : '${songs.length} Tracks â–¼',
+                            ? (lang.isHindi ? 'कम करें ▲' : 'Collapse ▲')
+                            : '${songs.length} Tracks ▼',
                         style: TextStyle(
                           color: isExpanded ? AppColors.accentCyan : AppColors.textSecondary,
                           fontSize: 11,
@@ -948,7 +948,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Row(
                 children: [
                   _buildSubCategoryChip(
-                    label: '${lang.isHindi ? "à¤¸à¤­à¥€" : "All"} (${songs.length})',
+                    label: '${lang.isHindi ? "सभी" : "All"} (${songs.length})',
                     isSelected: selectedSub == 'All',
                     onTap: () => setState(() => _selectedSubCategories[genreKey] = 'All'),
                   ),
@@ -958,7 +958,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     return Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: _buildSubCategoryChip(
-                        label: 'ðŸ“ $sub ($count)',
+                        label: '📁 $sub ($count)',
                         isSelected: selectedSub == sub,
                         onTap: () => setState(() => _selectedSubCategories[genreKey] = sub),
                       ),
@@ -1186,10 +1186,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildDiscoverFilterChips(LanguageService lang) {
     final chips = [
-      {'id': 'all', 'label': lang.isHindi ? 'âœ¨ à¤¸à¤­à¥€ à¤¸à¤‚à¤—à¥€à¤¤' : 'âœ¨ All Discover'},
-      {'id': 'artists', 'label': lang.isHindi ? 'ðŸŽ¤ à¤•à¤²à¤¾à¤•à¤¾à¤° (Artists)' : 'ðŸŽ¤ Artists'},
-      {'id': 'albums', 'label': lang.isHindi ? 'ðŸ’¿ à¤à¤²à¥à¤¬à¤® (Albums)' : 'ðŸ’¿ Albums'},
-      {'id': 'playlists', 'label': lang.isHindi ? 'ðŸ“ à¤ªà¥à¤²à¥‡à¤²à¤¿à¤¸à¥à¤Ÿà¥à¤¸' : 'ðŸ“ Playlists'},
+      {'id': 'all', 'label': lang.isHindi ? '✨ सभी संगीत' : '✨ All Discover'},
+      {'id': 'artists', 'label': lang.isHindi ? '🎤 कलाकार (Artists)' : '🎤 Artists'},
+      {'id': 'albums', 'label': lang.isHindi ? '💿 एल्बम (Albums)' : '💿 Albums'},
+      {'id': 'playlists', 'label': lang.isHindi ? '📁 प्लेलिस्ट्स' : '📁 Playlists'},
     ];
 
     return SingleChildScrollView(
@@ -1243,7 +1243,7 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                lang.isHindi ? 'ðŸŽ¤ à¤ªà¥à¤°à¤®à¥à¤– à¤•à¤²à¤¾à¤•à¤¾à¤° (Top Artists)' : 'ðŸŽ¤ Top Artists',
+                lang.isHindi ? '🎤 प्रमुख कलाकार (Top Artists)' : '🎤 Top Artists',
                 style: const TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 18,
@@ -1253,7 +1253,7 @@ class _HomeScreenState extends State<HomeScreen> {
               TextButton(
                 onPressed: () => setState(() => _activeDiscoverTab = 'artists'),
                 child: Text(
-                  lang.isHindi ? 'à¤¸à¤­à¥€ à¤¦à¥‡à¤–à¥‡à¤‚' : 'See All',
+                  lang.isHindi ? 'सभी देखें' : 'See All',
                   style: const TextStyle(color: AppColors.accentCyan, fontSize: 12, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -1304,7 +1304,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     color: const Color(0xFF131A2A),
                                     child: Center(
                                       child: Text(
-                                        artist.name.isNotEmpty ? artist.name[0] : 'ðŸŽµ',
+                                        artist.name.isNotEmpty ? artist.name[0] : '🎵',
                                         style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
                                       ),
                                     ),
@@ -1314,7 +1314,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   color: const Color(0xFF1E1B4B),
                                   child: Center(
                                     child: Text(
-                                      artist.name.isNotEmpty ? artist.name[0] : 'ðŸŽµ',
+                                      artist.name.isNotEmpty ? artist.name[0] : '🎵',
                                       style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
                                     ),
                                   ),
@@ -1345,7 +1345,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                       Text(
-                        '${artist.songCount} ${lang.isHindi ? "à¤—à¤¾à¤¨à¥‡" : "Tracks"}',
+                        '${artist.songCount} ${lang.isHindi ? "गाने" : "Tracks"}',
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.55),
                           fontSize: 10,
@@ -1375,7 +1375,7 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                lang.isHindi ? 'ðŸ’¿ à¤²à¥‹à¤•à¤ªà¥à¤°à¤¿à¤¯ à¤à¤²à¥à¤¬à¤® (Popular Albums)' : 'ðŸ’¿ Popular Albums',
+                lang.isHindi ? '💿 लोकप्रिय एल्बम (Popular Albums)' : '💿 Popular Albums',
                 style: const TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 18,
@@ -1385,7 +1385,7 @@ class _HomeScreenState extends State<HomeScreen> {
               TextButton(
                 onPressed: () => setState(() => _activeDiscoverTab = 'albums'),
                 child: Text(
-                  lang.isHindi ? 'à¤¸à¤­à¥€ à¤¦à¥‡à¤–à¥‡à¤‚' : 'See All',
+                  lang.isHindi ? 'सभी देखें' : 'See All',
                   style: const TextStyle(color: AppColors.accentCyan, fontSize: 12, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -1439,7 +1439,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       Text(
-                        '${album.songCount} ${lang.isHindi ? "à¤—à¤¾à¤¨à¥‡" : "Tracks"}',
+                        '${album.songCount} ${lang.isHindi ? "गाने" : "Tracks"}',
                         style: const TextStyle(
                           color: AppColors.accentCyan,
                           fontSize: 9,
@@ -1466,7 +1466,7 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${lang.isHindi ? "à¤¸à¤­à¥€ à¤•à¤²à¤¾à¤•à¤¾à¤°" : "All Artists"} (${artists.length})',
+            '${lang.isHindi ? "सभी कलाकार" : "All Artists"} (${artists.length})',
             style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
@@ -1510,7 +1510,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 color: const Color(0xFF1E1B4B),
                                 child: Center(
                                   child: Text(
-                                    artist.name.isNotEmpty ? artist.name[0] : 'ðŸŽµ',
+                                    artist.name.isNotEmpty ? artist.name[0] : '🎵',
                                     style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
                                   ),
                                 ),
@@ -1526,7 +1526,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      '${artist.songCount} ${lang.isHindi ? "à¤—à¤¾à¤¨à¥‡" : "Tracks"}',
+                      '${artist.songCount} ${lang.isHindi ? "गाने" : "Tracks"}',
                       style: TextStyle(color: Colors.white.withOpacity(0.55), fontSize: 10),
                     ),
                   ],
@@ -1548,7 +1548,7 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${lang.isHindi ? "à¤¸à¤­à¥€ à¤à¤²à¥à¤¬à¤®" : "All Albums"} (${albums.length})',
+            '${lang.isHindi ? "सभी एल्बम" : "All Albums"} (${albums.length})',
             style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
@@ -1595,7 +1595,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 11),
                     ),
                     Text(
-                      '${album.songCount} ${lang.isHindi ? "à¤—à¤¾à¤¨à¥‡" : "Tracks"}',
+                      '${album.songCount} ${lang.isHindi ? "गाने" : "Tracks"}',
                       style: const TextStyle(color: AppColors.accentCyan, fontSize: 10, fontWeight: FontWeight.w600),
                     ),
                   ],
@@ -1617,7 +1617,7 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${lang.isHindi ? "à¤¸à¤­à¥€ à¤ªà¥à¤²à¥‡à¤²à¤¿à¤¸à¥à¤Ÿà¥à¤¸ à¤µ à¤«à¤¼à¥‹à¤²à¥à¤¡à¤°" : "All Playlists & Folders"} (${playlists.length})',
+            '${lang.isHindi ? "सभी प्लेलिस्ट्स व फ़ोल्डर" : "All Playlists & Folders"} (${playlists.length})',
             style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
@@ -1654,7 +1654,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
                   ),
                   subtitle: Text(
-                    '${pl.songs.length} ${lang.isHindi ? "à¤—à¤¾à¤¨à¥‡" : "Tracks"} â€¢ ${pl.description}',
+                    '${pl.songs.length} ${lang.isHindi ? "गाने" : "Tracks"} • ${pl.description}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
