@@ -1,4 +1,4 @@
-﻿name: Build Musixa Player (Play Store AAB & Release APK)
+name: Build Musixa Player (Play Store AAB & Release APK)
 
 on:
   push:
