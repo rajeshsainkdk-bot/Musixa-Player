@@ -873,10 +873,10 @@ jobs:
           flutter test test/musixa_features_test.dart
 
       - name: Build Google Play Store App Bundle (AAB)
-        run: flutter build appbundle --release --no-tree-shake-icons
+        run: flutter build appbundle --release --build-name=1.0.${{ github.run_number }} --build-number=$((2000 + ${{ github.run_number }})) --no-tree-shake-icons
 
       - name: Build Standalone Release APK
-        run: flutter build apk --release --no-tree-shake-icons
+        run: flutter build apk --release --build-name=1.0.${{ github.run_number }} --build-number=$((2000 + ${{ github.run_number }})) --no-tree-shake-icons
 
       - name: Upload Google Play Store Bundle (AAB)
         uses: actions/upload-artifact@v4
@@ -918,13 +918,14 @@ jobs:
                   except Exception as ex:
                       print(f"Warning: upload to {bucket} failed: {ex}")
 
+              v_code = 2000 + run_num
               manifest = {
-                  'version_code': run_num,
+                  'version_code': v_code,
                   'version_name': f"1.0.{run_num}",
                   'apk_url': 'https://pub-d4f2e58dc2594d0c8dc1f30bbae4344f.r2.dev/update/musixa_player_latest.apk',
                   'file_size_mb': size_mb,
                   'release_notes': "Musixa Player: Default English UI, auto-popup prompt, and video performance enhancements!",
-                  'force_update': False
+                  'force_update': True
               }
               for bucket in ['musixa-music', 'msixa-music']:
                   try:
