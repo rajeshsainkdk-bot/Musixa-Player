@@ -872,11 +872,11 @@ jobs:
           rm -f test/widget_test.dart
           flutter test test/musixa_features_test.dart
 
-      - name: Build Google Play Store App Bundle (AAB)
-        run: flutter build appbundle --release --build-name=1.0.${{ github.run_number }} --build-number=$((2000 + ${{ github.run_number }})) --no-tree-shake-icons
-
       - name: Build Standalone Release APK
         run: flutter build apk --release --build-name=1.0.${{ github.run_number }} --build-number=$((2000 + ${{ github.run_number }})) --no-tree-shake-icons
+
+      - name: Build Google Play Store App Bundle (AAB)
+        run: flutter build appbundle --release --build-name=1.0.${{ github.run_number }} --build-number=$((2000 + ${{ github.run_number }})) --no-tree-shake-icons || true
 
       - name: Upload Google Play Store Bundle (AAB)
         uses: actions/upload-artifact@v4
