@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -37,8 +37,14 @@ import '../widgets/video_thumbnail_widget.dart';
 class VideoPlayerScreen extends StatefulWidget {
   final VideoItem video;
   final List<VideoItem>? playlist;
+  final String? initialDecoder;
 
-  const VideoPlayerScreen({Key? key, required this.video, this.playlist}) : super(key: key);
+  const VideoPlayerScreen({
+    Key? key,
+    required this.video,
+    this.playlist,
+    this.initialDecoder,
+  }) : super(key: key);
 
   @override
   State<VideoPlayerScreen> createState() => _VideoPlayerScreenState();
