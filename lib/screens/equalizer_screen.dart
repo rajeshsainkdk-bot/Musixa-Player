@@ -306,7 +306,7 @@ class EqualizerScreen extends StatelessWidget {
                         leading: const Icon(Icons.copyright_rounded, color: AppColors.primaryLight),
                         title: const Text('Catalog Licensing', style: TextStyle(color: AppColors.textPrimary)),
                         subtitle: const Text(
-                          'Legal Creative Commons (CC-BY / CC0 / SA). No unauthorized YouTube scraping.',
+                          'Legal Creative Commons (CC-BY / CC0 / SA) & Verified Royalty-Free Tracks',
                           style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
                         ),
                       ),

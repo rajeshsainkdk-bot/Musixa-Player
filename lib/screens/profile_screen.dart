@@ -354,8 +354,8 @@ class ProfileScreen extends StatelessWidget {
             // 4. Sign Out Button
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.redAccent,
-                side: BorderSide(color: Colors.redAccent.withOpacity(0.5)),
+                foregroundColor: Colors.orangeAccent,
+                side: BorderSide(color: Colors.orangeAccent.withOpacity(0.5)),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
@@ -365,6 +365,21 @@ class ProfileScreen extends StatelessWidget {
                 style: GoogleFonts.syne(fontSize: 14, fontWeight: FontWeight.bold),
               ),
               onPressed: () => _confirmSignOut(context, backend, lang),
+            ),
+            const SizedBox(height: 12),
+
+            // 5. Google Play Data Safety: Delete Account & Data
+            TextButton.icon(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.redAccent.shade100,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+              ),
+              icon: const Icon(Icons.delete_forever_rounded, size: 16),
+              label: Text(
+                lang.isHindi ? 'खाता एवं डेटा हटाएं (Delete Account)' : 'Delete Account & Personal Data',
+                style: const TextStyle(fontSize: 12, decoration: TextDecoration.underline),
+              ),
+              onPressed: () => _confirmDeleteAccount(context, backend, lang),
             ),
             const SizedBox(height: 16),
 
@@ -454,6 +469,61 @@ class ProfileScreen extends StatelessWidget {
             },
             child: Text(
               lang.isHindi ? 'हाँ, लॉग आउट करें' : 'Yes, Sign Out',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteAccount(BuildContext context, CloudBackendService backend, LanguageService lang) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF131A2A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 24),
+            const SizedBox(width: 8),
+            Text(
+              lang.isHindi ? 'खाता हटाएं?' : 'Delete Account?',
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Text(
+          lang.isHindi
+              ? 'खाता हटाने से आपका प्रोफाइल और सभी व्यक्तिगत डेटा सर्वर से स्थायी रूप से मिटा दिया जाएगा। यह क्रिया पूर्ववत नहीं की जा सकती।'
+              : 'Permanently delete your account, saved preferences, and personal cloud profile. This action cannot be undone.',
+          style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(lang.t('cancel'), style: const TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              Navigator.pop(context);
+              await backend.deleteCurrentUserAccount();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(lang.isHindi ? 'खाता सफलतापूर्वक हटा दिया गया।' : 'Account deleted successfully.'),
+                    backgroundColor: Colors.redAccent,
+                  ),
+                );
+              }
+            },
+            child: Text(
+              lang.isHindi ? 'स्थायी रूप से हटाएं' : 'Delete Permanently',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),

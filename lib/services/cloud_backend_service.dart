@@ -546,6 +546,19 @@ class CloudBackendService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Google Play Data Safety Compliant: Allows users to permanently delete their account & local profile data
+  Future<void> deleteCurrentUserAccount() async {
+    final uid = _currentUser?.uid;
+    if (uid != null) {
+      _users.removeWhere((u) => u.uid == uid);
+      await _persistUsers();
+    }
+    _currentUser = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keyCurrentUser);
+    notifyListeners();
+  }
+
   // ==========================================
   // SONG UPLOAD & DUPLICATE DETECTION
   // ==========================================

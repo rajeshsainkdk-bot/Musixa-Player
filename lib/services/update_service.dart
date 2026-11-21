@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'language_service.dart';
 
 /// App Auto-Updater Service for Musixa Player & Musixa Admin
@@ -23,6 +24,17 @@ class UpdateService {
   static const String _prefKeyLastPromptTime = 'musixa_last_update_prompt_time';
   static final ValueNotifier<Map<String, dynamic>?> availableUpdateNotifier = ValueNotifier(null);
   static final ValueNotifier<Map<String, dynamic>?> adminAvailableUpdateNotifier = ValueNotifier(null);
+
+  /// Open official Google Play Store listing for compliant in-store updates
+  static Future<void> openPlayStoreListing() async {
+    const playStoreUrl = 'https://play.google.com/store/apps/details?id=com.musixa.player';
+    final uri = Uri.parse(playStoreUrl);
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    } catch (_) {}
+  }
 
   /// Read exact installed package version dynamically from Android PackageManager
   static Future<Map<String, dynamic>> getInstalledVersion() async {
@@ -408,17 +420,40 @@ class UpdateService {
                       },
                       child: Text(isHindi ? 'बाद में' : 'Later', style: const TextStyle(color: Colors.grey)),
                     ),
-                  if (!isDownloading)
+                  if (!isDownloading) ...[
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF10B981),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      icon: const Icon(Icons.shop_rounded, size: 16),
+                      label: Text(
+                        isHindi ? 'Google Play' : 'Play Store',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                      ),
+                      onPressed: () async {
+                        try {
+                          final p = await SharedPreferences.getInstance();
+                          await p.setInt(prefKeyDismissed, remoteCode);
+                          await p.setInt(prefKeyPrompt, DateTime.now().millisecondsSinceEpoch);
+                        } catch (_) {}
+                        if (dialogContext.mounted) Navigator.pop(dialogContext);
+                        await openPlayStoreListing();
+                      },
+                    ),
+                    const SizedBox(width: 8),
                     ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFFFB300),
                         foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
-                      icon: const Icon(Icons.download_rounded, size: 18),
+                      icon: const Icon(Icons.download_rounded, size: 16),
                       label: Text(
-                        isHindi ? 'अभी अपडेट करें' : 'Update Now',
+                        isHindi ? 'डायरेक्ट APK' : 'Direct APK',
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                       ),
                       onPressed: () async {
@@ -604,6 +639,7 @@ class UpdateService {
                         }
                       },
                     ),
+                  ],
                 ],
               ),
             );

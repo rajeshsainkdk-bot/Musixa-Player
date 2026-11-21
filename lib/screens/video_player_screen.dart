@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -3058,7 +3058,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
             _buildDecoderOptionTile(
               code: 'HW+',
               title: 'HW+ Decoder',
-              subtitle: 'Enhanced Hardware decoding (MX Player engine)',
+              subtitle: 'Enhanced Hardware decoding (Pro engine)',
               ctx: ctx,
             ),
             _buildDecoderOptionTile(
